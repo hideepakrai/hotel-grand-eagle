@@ -47,7 +47,7 @@ export const ContentItem: React.FC<ContentItemProps> = ({
         return (
           <div className="space-y-4">
             {(item.items || []).map((slide: any, idx: number) => (
-              <div key={idx} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 relative group/slide">
+              <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 relative group/slide">
                 <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100/50">
                    <div className="flex items-center gap-2">
                      <span className="p-1 px-2 rounded-lg bg-slate-900 text-[8px] font-black uppercase text-white">Slide #{idx + 1}</span>
@@ -179,7 +179,7 @@ export const ContentItem: React.FC<ContentItemProps> = ({
               />
             ) : (
               <div className="space-y-3">
-                <div className="relative group/img-preview rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center min-h-[160px] max-h-[300px]">
+                <div className="relative group/img-preview rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center min-h-[160px] max-h-[300px]">
                   <img src={item.url} alt={item.alt} className="w-full h-full object-contain" />
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img-preview:opacity-100 transition-opacity flex items-center justify-center gap-3">
                     <MediaLibraryModal 
@@ -525,7 +525,7 @@ export const ContentItem: React.FC<ContentItemProps> = ({
   }
 
   return (
-    <div className="group relative bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:border-slate-300 transition-all">
+    <div className="group relative bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:border-slate-300 transition-all">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400">

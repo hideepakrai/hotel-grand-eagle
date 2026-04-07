@@ -93,7 +93,7 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "2fr 1fr 90px 120px 130px",
+                            gridTemplateColumns: "2fr 1fr 90px 130px",
                             gap: 12,
                             padding: "10px 20px",
                             borderBottom: "1px solid #f3f4f6",
@@ -104,10 +104,9 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                             color: "#9ca3af",
                         }}
                     >
-                        <span>Page</span>
+                        <span>Title</span>
                         <span>Slug</span>
                         <span>Status</span>
-                        <span>Updated</span>
                         <span style={{ textAlign: "right" }}>Actions</span>
                     </div>
 
@@ -116,7 +115,7 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                             key={page.id}
                             style={{
                                 display: "grid",
-                                gridTemplateColumns: "2fr 1fr 90px 120px 130px",
+                                gridTemplateColumns: "2fr 1fr 90px 130px",
                                 gap: 12,
                                 padding: "14px 20px",
                                 borderBottom: i < pages.length - 1 ? "1px solid #f9fafb" : "none",
@@ -207,11 +206,6 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                                 </Badge>
                             </div>
 
-                            {/* Updated at */}
-                            <div style={{ fontSize: 12, color: "#9ca3af" }}>
-                                {fmtDate(page.updatedAt)}
-                            </div>
-
                             {/* Actions */}
                             <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                                 {page.isPublished && (
@@ -244,6 +238,7 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                                     size="sm"
                                     variant="secondary"
                                     onClick={() => { setTarget(page); setView("edit"); }}
+                                    style={{ borderRadius: "8px", fontWeight: 600 }}
                                 >
                                     <Ic.Edit /> Edit
                                 </Btn>
@@ -251,6 +246,7 @@ export default function PagesCMS({ pages, onAdd, onUpdate, onDelete }: PagesCMSP
                                     size="sm"
                                     variant="danger"
                                     onClick={() => setDelId(page.id)}
+                                    style={{ borderRadius: "8px" }}
                                 >
                                     <Ic.Trash />
                                 </Btn>

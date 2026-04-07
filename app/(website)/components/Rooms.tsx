@@ -43,8 +43,7 @@ export default function Rooms() {
             <span>Accommodations</span>
           </div>
           <h2 className="section-title fade-in-up visible">
-            Rooms &amp; <br />
-            <em>Suites</em>
+            Rooms
           </h2>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
@@ -167,7 +166,7 @@ export default function Rooms() {
           color: "rgba(200,192,176,0.35)",
         }}
       >
-        ← Scroll to explore all suites
+        ← Scroll to explore all rooms
       </div>
     </section>
   );

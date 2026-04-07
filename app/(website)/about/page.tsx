@@ -61,32 +61,16 @@ export default function AboutPage() {
                         </div>
                     </div>
                     
-                    <div className="about-text">
-                        <h2 className="section-title fade-in-up" style={{ fontSize: 36, marginBottom: 32, lineHeight: 1.2 }}>
-                            Reimagining the art of<br /><em>refined living</em>
+                    <div className="about-text" style={{ fontSize: "1.05rem", lineHeight: "1.8", color: "#a0a0a0" }}>
+                        <h2 className="section-title fade-in-up" style={{ fontSize: 36, marginBottom: 32, lineHeight: 1.2, color: "var(--ivory)" }}>
+                            Budget-Friendly Stay in<br /><em>Jaipur</em>
                         </h2>
-                        <p className="fade-in-up">
-                            {hotel?.name || "Hotel Grand Eagle"} was established in Jaipur with a single vision: to create a sanctuary where heritage and modernity exist in perfect harmony. Every corner of our property tells a story of craftsmanship, from the hand-carved pillars to the curated art that graces our halls.
+                        <p className="fade-in-up" style={{ marginBottom: "20px" }}>
+                            Hotel Grand Eagle is a <strong style={{ color: "var(--gold)" }}>value-for-money hotel</strong> offering clean, well-furnished rooms tailored for both business travelers and tourists. Each room is thoughtfully equipped with essentials such as <strong style={{ color: "var(--gold)" }}>air conditioning, private bathrooms, comfortable chairs, work desks, telephones, televisions</strong>, and <strong style={{ color: "var(--gold)" }}>24/7 hot and cold water supply</strong>—everything you need for a <strong style={{ color: "var(--gold)" }}>comfortable yet affordable stay</strong>.
                         </p>
                         <p className="fade-in-up">
-                            We believe that true luxury is not defined by excess, but by the quiet perfection of a tailored experience. Whether it is the morning light hitting the courtyard or the personalized greeting from our staff, we aim to make every moment spent here feel unique and unforgettable.
+                            Located near <strong style={{ color: "var(--gold)" }}>JECC</strong>, major <strong style={{ color: "var(--gold)" }}>transport hubs</strong>, and <strong style={{ color: "var(--gold)" }}>local food joints</strong>, our hotel is perfect for <strong style={{ color: "var(--gold)" }}>budget-conscious travelers</strong> seeking convenience and accessibility. With a focus on <strong style={{ color: "var(--gold)" }}>cleanliness, functionality</strong>, and <strong style={{ color: "var(--gold)" }}>friendly service</strong>, Hotel Grand Eagle is the ideal pick for <strong style={{ color: "var(--gold)" }}>short or extended stays</strong> in Jaipur's Sitapura Industrial Area.
                         </p>
-                        
-                        <div className="pillars" style={{ marginTop: 48 }}>
-                            {[
-                                { icon: "💎", title: "Luxury Redefined", desc: "Crafting experiences that transcend the ordinary." },
-                                { icon: "🏛️", title: "Cultural Depth", desc: "Rooted in the rich traditions of the Pink City." },
-                                { icon: "🗝️", title: "Intimate Care", desc: "Personalized service tailored to your lifestyle." }
-                            ].map((p, i) => (
-                                <div key={i} className="pillar fade-in-up">
-                                    <div className="pillar-icon" style={{ fontSize: 18 }}>{p.icon}</div>
-                                    <div>
-                                        <div className="pillar-title">{p.title}</div>
-                                        <div className="pillar-desc">{p.desc}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
 
