@@ -49,7 +49,7 @@ export default function RoomsPage() {
                         <span className="line"></span>
                     </div>
                     <h1 className="section-title fade-in-up" style={{ fontSize: "clamp(40px, 8vw, 84px)" }}>
-                        Rooms & <em>Suites</em>
+                        Rooms
                     </h1>
                     <p className="fade-in-up" style={{ color: "var(--ivory-dim)", marginTop: 24, fontSize: 15, maxWidth: 600, margin: "24px auto 0", lineHeight: 1.8 }}>
                         Discover our collection of meticulously designed sanctuaries, where every detail is crafted for your ultimate comfort and repose.

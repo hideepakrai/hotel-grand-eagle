@@ -101,7 +101,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 mr-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2 mr-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
             <Toggle
               checked={page.isPublished!}
               onChange={(val) => setPage({ ...page, isPublished: val })}
@@ -125,18 +125,16 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         </div>
       </div>
 
-      <div className="tab-bar" style={{ maxWidth: '400px', height: '48px', padding: '4px', borderRadius: '12px' }}>
+      <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl mb-4 w-fit">
         <button
-           className={`tab-btn ${activeTab === 'content' ? 'active' : ''}`}
+           className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm ${activeTab === 'content' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
            onClick={() => setActiveTab('content')}
-           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
         >
           <Layout size={16} /> Content
         </button>
         <button
-           className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+           className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm ${activeTab === 'settings' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
            onClick={() => setActiveTab('settings')}
-           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
         >
           <Settings size={16} /> SEO & Settings
         </button>
@@ -146,7 +144,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         <div className="space-y-8 outline-none animate-in fade-in">
           <div className="flex flex-col gap-8">
             <div className="w-full space-y-6">
-              <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+              <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
@@ -165,8 +163,8 @@ export const PageEditor: React.FC<PageEditorProps> = ({
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
                       Slug Path
                     </label>
-                    <div className="flex items-center">
-                      <span className="bg-slate-50 border border-r-0 border-slate-200 h-12 px-4 flex items-center text-slate-400 text-sm" style={{ borderRadius: '12px 0 0 12px' }}>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold select-none">
                         /
                       </span>
                       <Inp
@@ -180,7 +178,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
                               .replace(/ /g, "-"),
                           })
                         }
-                        style={{ height: '48px', borderRadius: '0 12px 12px 0' }}
+                        style={{ height: '48px', fontSize: '15px', paddingLeft: '32px' }}
                       />
                     </div>
                   </div>
@@ -202,7 +200,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
                 </div>
 
                 {!page.content || page.content.length === 0 ? (
-                  <div className="h-64 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 gap-4">
+                  <div className="h-64 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 gap-4">
                     <Layout size={40} className="opacity-20" />
                     <p className="text-sm font-medium text-slate-400">
                       Your page is empty. Start by adding a section.
@@ -236,9 +234,9 @@ export const PageEditor: React.FC<PageEditorProps> = ({
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl shadow-slate-200">
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6">
-                Quick Help
+            <div className="bg-slate-900 rounded-xl p-8 text-white shadow-xl shadow-slate-200 mt-12 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800 to-slate-900">
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span> Quick Help
               </h4>
               <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <li className="flex gap-3">
@@ -274,7 +272,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
 
       {activeTab === 'settings' && (
         <div className="space-y-8 outline-none animate-in fade-in">
-          <div className="max-w-2xl bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+          <div className="max-w-2xl bg-white rounded-xl border border-slate-200 p-8 shadow-sm space-y-6">
             <h3 className="text-lg font-bold text-slate-900 mb-2">
               Search Engine Optimization (SEO)
             </h3>

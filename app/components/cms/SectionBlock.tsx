@@ -133,7 +133,7 @@ export const SectionBlock: React.FC<SectionBlockProps> = ({
   const totalItemCount = columns.reduce((acc: number, col: any[]) => acc + (col?.length || 0), 0);
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 space-y-4 relative group/section transition-all hover:border-slate-300 shadow-sm border-l-4 border-l-slate-900">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-4 relative group/section transition-all hover:border-slate-300 shadow-sm border-l-4 border-l-slate-900">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
           <button
@@ -250,48 +250,48 @@ export const SectionBlock: React.FC<SectionBlockProps> = ({
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-1.5 pt-4 border-t border-slate-50 mt-4">
+              <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-100 mt-4">
                 <button
                   onClick={() => addContentElement("heading", colIdx)}
-                  className="p-1 px-2 rounded-lg border border-slate-100 bg-white text-[9px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Heading
+                  <Plus size={12} /> Heading
                 </button>
                 <button
                   onClick={() => addContentElement("paragraph", colIdx)}
-                   className="p-1 px-2 rounded-lg border border-slate-100 bg-white text-[9px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Text
+                  <Plus size={12} /> Text
                 </button>
                 <button
                   onClick={() => addContentElement("image", colIdx)}
-                  className="p-1 px-2 rounded-lg border border-slate-100 bg-white text-[9px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Image
+                  <Plus size={12} /> Image
                 </button>
                 <button
                   onClick={() => addContentElement("section", colIdx)}
-                  className="p-1 px-2 rounded-lg border border-blue-50 bg-white text-[9px] font-bold text-blue-400 hover:border-blue-300 hover:text-blue-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-blue-100 bg-white text-[10px] font-bold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Sub
+                  <Plus size={12} /> Section
                 </button>
                 <button
                   onClick={() => addContentElement("button", colIdx)}
-                   className="p-1 px-2 rounded-lg border border-slate-100 bg-white text-[9px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Btn
+                  <Plus size={12} /> Button
                 </button>
                 <button
                   onClick={() => addContentElement("carousel", colIdx)}
-                   className="p-1 px-2 rounded-lg border border-purple-50 bg-white text-[9px] font-bold text-purple-400 hover:border-purple-300 hover:text-purple-900 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-purple-100 bg-white text-[10px] font-bold text-purple-600 hover:border-purple-200 hover:bg-purple-50 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Carousel
+                  <Plus size={12} /> Carousel
                 </button>
                 <button
                   onClick={() => addContentElement("cards", colIdx)}
-                   className="p-1 px-2 rounded-lg border border-slate-100 bg-white text-[9px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer"
+                   className="px-3 py-1.5 rounded-lg border border-emerald-100 bg-white text-[10px] font-bold text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus size={10} /> Card
+                  <Plus size={12} /> Card
                 </button>
               </div>
             </div>

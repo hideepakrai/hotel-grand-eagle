@@ -57,7 +57,7 @@ export const CmsParagraph = ({ text }: { text: string }) => {
 // IMAGE Component
 export const CmsImage = ({ url, alt }: { url: string, alt?: string }) => {
   return (
-    <div className="my-8 rounded-3xl overflow-hidden border border-slate-100 shadow-xl shadow-slate-200/50">
+    <div className="my-8 rounded-xl overflow-hidden border border-slate-100 shadow-xl shadow-slate-200/50">
       <img src={url} alt={alt || ""} className="w-full h-auto object-cover" />
     </div>
   );
@@ -75,7 +75,7 @@ export const CmsButton = ({ label, link }: { label: string, link?: string }) => 
       <Component 
         href={resolvedLink} 
         {...(extraProps as any)}
-        className="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 hover:-translate-y-0.5 active:translate-y-0"
+        className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 hover:-translate-y-0.5 active:translate-y-0"
       >
         {label}
       </Component>
@@ -101,9 +101,9 @@ export const CmsCards = ({ items }: { items?: any[] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-12">
       {items.map((card, i) => (
-        <div key={i} className="group p-6 rounded-3xl border border-slate-100 bg-white shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+        <div key={i} className="group p-6 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all">
           {card.image && (
-            <div className="h-48 rounded-2xl overflow-hidden mb-6">
+            <div className="h-48 rounded-xl overflow-hidden mb-6">
                <img src={card.image} alt={card.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
             </div>
           )}
@@ -123,7 +123,7 @@ export const CmsFeatures = ({ items }: { items?: any[] }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 my-12">
       {items.map((feat, i) => (
         <div key={i} className="flex gap-6">
-          <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 flex-shrink-0">
+          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-900 flex-shrink-0">
             <Zap size={24} />
           </div>
           <div>

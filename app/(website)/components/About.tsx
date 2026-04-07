@@ -31,76 +31,19 @@ export default function About() {
         <div>
           <div className="section-eyebrow fade-in-up visible">
             <span className="line"></span>
-            <span>Our Philosophy</span>
+            <span>About Us</span>
           </div>
           <h2 className="section-title fade-in-up visible" style={{ marginBottom: "28px" }}>
-            A story written<br />
-            in <em>gold threads</em>
+            Budget-Friendly Stay in<br />
+            <em>Jaipur</em>
           </h2>
-          <div className="about-text">
-            <p className="fade-in-up visible">
-              Hotel Grand Eagle was conceived as a destination where tradition meets timeless elegance. 
-              Born from a reverence for Rajasthani craftsmanship and the high standards of boutique hospitality.
+          <div className="about-text" style={{ fontSize: "1.05rem", lineHeight: "1.8", color: "#a0a0a0" }}>
+            <p className="fade-in-up visible" style={{ marginBottom: "20px" }}>
+              Hotel Grand Eagle is a <strong style={{ color: "var(--gold)" }}>value-for-money hotel</strong> offering clean, well-furnished rooms tailored for both business travelers and tourists. Each room is thoughtfully equipped with essentials such as <strong style={{ color: "var(--gold)" }}>air conditioning, private bathrooms, comfortable chairs, work desks, telephones, televisions</strong>, and <strong style={{ color: "var(--gold)" }}>24/7 hot and cold water supply</strong>—everything you need for a <strong style={{ color: "var(--gold)" }}>comfortable yet affordable stay</strong>.
             </p>
             <p className="fade-in-up visible">
-              Every texture, scent, and experience has been thoughtfully considered. Because we believe true luxury
-              is not about excess — it is about the quiet perfection of detail.
+              Located near <strong style={{ color: "var(--gold)" }}>JECC</strong>, major <strong style={{ color: "var(--gold)" }}>transport hubs</strong>, and <strong style={{ color: "var(--gold)" }}>local food joints</strong>, our hotel is perfect for <strong style={{ color: "var(--gold)" }}>budget-conscious travelers</strong> seeking convenience and accessibility. With a focus on <strong style={{ color: "var(--gold)" }}>cleanliness, functionality</strong>, and <strong style={{ color: "var(--gold)" }}>friendly service</strong>, Hotel Grand Eagle is the ideal pick for <strong style={{ color: "var(--gold)" }}>short or extended stays</strong> in Jaipur's Sitapura Industrial Area.
             </p>
-          </div>
-          <div className="pillars">
-            <div className="pillar fade-in-up visible">
-              <div className="pillar-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="1.5">
-                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                </svg>
-              </div>
-              <div>
-                <div className="pillar-title">Uncompromising Excellence</div>
-                <div className="pillar-desc">
-                  Every element chosen to exceed expectation — from thread count to turndown ritual.
-                </div>
-              </div>
-            </div>
-            <div className="pillar fade-in-up visible">
-              <div className="pillar-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="1.5">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                </svg>
-              </div>
-              <div>
-                <div className="pillar-title">Heartfelt Hospitality</div>
-                <div className="pillar-desc">
-                  Our team doesn't just serve — they connect, anticipate, and genuinely care.
-                </div>
-              </div>
-            </div>
-            <div className="pillar fade-in-up visible">
-              <div className="pillar-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="1.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div>
-                <div className="pillar-title">Sustainable Luxury</div>
-                <div className="pillar-desc">
-                  Responsible practices woven into every decision, without compromise on comfort.
-                </div>
-              </div>
-            </div>
-            <div className="pillar fade-in-up visible">
-              <div className="pillar-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="1.5">
-                  <circle cx="12" cy="8" r="6" />
-                  <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                </svg>
-              </div>
-              <div>
-                <div className="pillar-title">Award-Winning Design</div>
-                <div className="pillar-desc">
-                  Rajasthani heritage celebrated with a globally recognized modern sensibility.
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
