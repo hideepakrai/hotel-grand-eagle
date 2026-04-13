@@ -1,9 +1,28 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-export default function Testimonials() {
-  const testimonials = [
+import type { Testimonial } from "../../components/types";
+
+export default function Testimonials({ data, eyebrow, title, titleEm }: { 
+  data?: Testimonial[];
+  eyebrow?: string;
+  title?: string;
+  titleEm?: string;
+}) {
+  const [dbData, setDbData] = useState<Testimonial[]>([]);
+  
+  useEffect(() => {
+    if (!data) {
+      fetch("/api/testimonials")
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d)) setDbData(d); })
+        .catch(() => {});
+    }
+  }, [data]);
+
+  const testimonials = data && data.length > 0 ? data : (dbData.length > 0 ? dbData : [
     {
+      id: "t1",
       text: '"Hotel Grand Eagle transcends the concept of a stay. It is an immersive cultural experience delivered through the lens of flawless modern hospitality."',
       name: "Aditi Sharma",
       role: "Travel Editor, Condé Nast Traveller India",
@@ -11,6 +30,7 @@ export default function Testimonials() {
       img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80",
     },
     {
+      id: "t2",
       text: '"The Presidential Suite felt like a private palace. From the moment our butler greeted us to the final handwritten farewell note, every interaction was orchestrated with exceptional care."',
       name: "James Whitmore",
       role: "CEO, Meridian Capital",
@@ -18,13 +38,14 @@ export default function Testimonials() {
       img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80",
     },
     {
+      id: "t3",
       text: '"As an architect who obsesses over space and proportion, walking into Hotel Grand Eagle was like seeing all my ideals made tangible. The design is masterful."',
       name: "Priya Nair",
       role: "Principal Architect, Nair & Partners",
       location: "Mumbai, India",
       img: "https://images.unsplash.com/photo-1494790108755-2616b12c4c66?w=80",
     },
-  ];
+  ]);
 
   const [currentTesti, setCurrentTesti] = useState(0);
   const [fade, setFade] = useState(true);
@@ -56,9 +77,17 @@ export default function Testimonials() {
   useEffect(() => {
     const interval = setInterval(goNext, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [testimonials.length]); // Added dependency
+
+  useEffect(() => {
+    if (currentTesti >= testimonials.length) {
+      setCurrentTesti(0);
+    }
+  }, [testimonials.length]);
 
   const t = testimonials[currentTesti];
+
+  if (!t) return null;
 
   return (
     <section id="testimonials">
@@ -67,11 +96,11 @@ export default function Testimonials() {
         <div className="testi-header">
           <div className="testi-eyebrow">
             <span className="eyebrow-line"></span>
-            <span className="eyebrow-text">Guest Stories</span>
+            <span className="eyebrow-text">{eyebrow || "Guest Stories"}</span>
             <span className="eyebrow-line"></span>
           </div>
           <h2 className="section-title fade-in-up visible">
-            Voices of <em>Grand Eagle</em>
+            {title || "Voices of"} <em>{titleEm || "Grand Eagle"}</em>
           </h2>
         </div>
 
@@ -93,7 +122,11 @@ export default function Testimonials() {
           <blockquote className="testi-quote font-display">{t.text}</blockquote>
           <div className="testi-author">
             <div className="testi-avatar">
-              <img src={t.img} alt={t.name} />
+              {t.img ? (
+                <img src={t.img} alt={t.name} />
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 20, background: "#f3f4f6" }}>👤</div>
+              )}
             </div>
             <div style={{ textAlign: "left" }}>
               <div className="testi-name">{t.name}</div>
@@ -125,16 +158,6 @@ export default function Testimonials() {
           </button>
         </div>
 
-        <div className="press-strip">
-          <div className="press-label">As Featured In</div>
-          <div className="press-logos">
-            <span className="press-logo">CONDÉ NAST</span>
-            <span className="press-logo">VOGUE INDIA</span>
-            <span className="press-logo">ARCHITECTURAL DIGEST</span>
-            <span className="press-logo">TRAVEL + LEISURE</span>
-            <span className="press-logo">FORBES TRAVEL</span>
-          </div>
-        </div>
       </div>
     </section>
   );

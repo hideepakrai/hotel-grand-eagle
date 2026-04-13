@@ -16,8 +16,9 @@ import HotelOverview from "../../components/HotelOverview";
 import NearbyAdmin from "../../components/NearbyAdmin";
 import PagesCMS from "../../components/PagesCMS";
 import GalleryAdmin from "../../components/GalleryAdmin";
+import TestimonialsAdmin from "../../components/TestimonialsAdmin";
 import { useAdmin } from "../../components/AdminContext";
-import type { NearbyPlace, CMSPage, GalleryImage } from "../../components/types";
+import type { NearbyPlace, CMSPage, GalleryImage, Testimonial } from "../../components/types";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const CURRENCIES = ["INR"];
@@ -466,7 +467,8 @@ export default function AdminPage() {
         amenityCats, setAmenityCats, currency, setCurrency, bookings, setBookings,
         customers, setCustomers, mealPlans, setMealPlans, hkTasks, setHkTasks,
         maintenance, setMaintenance, pricingRules, setPricingRules, staff, setStaff,
-        rooms, setRooms, nearbyPlaces, setNearbyPlaces, cmsPages, setCmsPages, galleryImages, setGalleryImages, updateHotel
+        rooms, setRooms, nearbyPlaces, setNearbyPlaces, cmsPages, setCmsPages, galleryImages, setGalleryImages,
+        testimonials, setTestimonials, updateHotel
     } = useAdmin();
 
     // CMS Pages actions
@@ -632,6 +634,21 @@ export default function AdminPage() {
         setNearbyPlaces(p => p.filter(x => x.id !== id));
     };
 
+    // Testimonial actions
+    const addTestimonial = async (t: Testimonial) => {
+        const res = await fetch("/api/testimonials", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
+        const data = await res.json();
+        if (data.testimonial) setTestimonials(p => [data.testimonial, ...p]);
+    };
+    const updateTestimonial = async (t: Testimonial) => {
+        await fetch("/api/testimonials", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
+        setTestimonials(p => p.map(x => x.id === t.id ? t : x));
+    };
+    const deleteTestimonial = async (id: string) => {
+        await fetch(`/api/testimonials?id=${id}`, { method: "DELETE" });
+        setTestimonials(p => p.filter(x => x.id !== id));
+    };
+
     // Quick check-in
     const handleCheckIn = (bookingId: string, roomNumber: string, mealPlanId: string) => {
         const mp = mealPlans.find(m => m.id === mealPlanId);
@@ -660,6 +677,7 @@ export default function AdminPage() {
             {page === "nearby" && <NearbyAdmin places={nearbyPlaces} onAdd={addNearbyPlace} onUpdate={updateNearbyPlace} onDelete={deleteNearbyPlace} />}
             {page === "cms" && <PagesCMS pages={cmsPages} onAdd={addPage} onUpdate={updatePage} onDelete={deletePage} />}
             {page === "gallery" && <GalleryAdmin images={galleryImages} onAdd={addGalleryImage} onUpdate={updateGalleryImage} onDelete={deleteGalleryImage} onReorder={reorderGallery} />}
+            {page === "testimonials" && <TestimonialsAdmin testimonials={testimonials} onAdd={addTestimonial} onUpdate={updateTestimonial} onDelete={deleteTestimonial} />}
         </React.Fragment>
     );
 }
