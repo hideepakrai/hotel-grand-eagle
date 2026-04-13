@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -26,19 +26,91 @@ export default function Hero() {
     }
   };
 
+  const [heroData, setHeroData] = useState<any>(null);
+  const [activeImgIndex, setActiveImgIndex] = useState(0);
+
+  useEffect(() => {
+    async function fetchHero() {
+      try {
+        const res = await fetch("/api/pages?slug=home");
+        if (res.ok) {
+          const data = await res.json();
+          let foundHero = null;
+          if (data?.content) {
+            for (const section of data.content) {
+              if (section.columns) {
+                for (const col of section.columns) {
+                  if (Array.isArray(col)) {
+                    for (const item of col) {
+                      if (item.type === "hero") {
+                        foundHero = item;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+              if (foundHero) break;
+            }
+          }
+          if (foundHero) setHeroData(foundHero);
+        }
+      } catch (err) {
+        console.error("Failed to fetch hero", err);
+      }
+    }
+    fetchHero();
+  }, []);
+
+  const images = heroData?.images && heroData.images.length > 0
+    ? heroData.images
+    : [{ url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop" }];
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveImgIndex((prev) => (prev + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  const title = heroData?.title || "Smart, Simple\n*Comfort*";
+  const subtitle = heroData?.subtitle || "An intimate retreat in the heart of Sitapura, Jaipur — where affordability meets the warmth of genuine hospitality.";
+  const primaryBtnLabel = heroData?.primaryButtonLabel || "Explore Rooms";
+  const primaryBtnLink = heroData?.primaryButtonLink || "#rooms";
+  const secondaryBtnLabel = heroData?.secondaryButtonLabel || "Our Story";
+  const secondaryBtnLink = heroData?.secondaryButtonLink || "#about";
+
   return (
     <section className="hero" id="hero">
-      {/* Background */}
-      <div className="hero-bg" />
-      <div className="hero-grad1" />
-      <div className="hero-grad2" />
+      {/* Backgrounds */}
+      {images.map((img: any, idx: number) => (
+        <div 
+          key={idx}
+          className="hero-bg" 
+          style={{ 
+            backgroundImage: `url('${img.url}')`,
+            opacity: activeImgIndex === idx ? 1 : 0,
+            transition: 'opacity 1.5s ease-in-out',
+            zIndex: activeImgIndex === idx ? 1 : 0
+          }} 
+        />
+      ))}
+      <div className="hero-grad1" style={{ zIndex: 2 }} />
+      <div className="hero-grad2" style={{ zIndex: 2 }} />
 
       {/* Slide dots */}
-      <div className="slide-dots">
-        <div className="dot active" />
-        <div className="dot" />
-        <div className="dot" />
-      </div>
+      {images.length > 1 && (
+        <div className="slide-dots" style={{ zIndex: 10 }}>
+          {images.map((_: any, idx: number) => (
+            <div 
+              key={idx} 
+              className={`dot ${activeImgIndex === idx ? 'active' : ''}`}
+              onClick={() => setActiveImgIndex(idx)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Inner flex column layout */}
       <div className="hero-inner">
@@ -50,24 +122,22 @@ export default function Hero() {
             <span className="eyebrow-text">WELCOME TO HOTEL GRAND EAGLE</span>
           </div>
 
-          <h1 className="hero-headline font-display">
-            Smart, Simple<br /><em>Comfort</em>
-          </h1>
+          <h1 
+            className="hero-headline font-display"
+            dangerouslySetInnerHTML={{ __html: title.replace(/\n/g, '<br />').replace(/\*(.*?)\*/g, '<em>$1</em>') }}
+          />
 
-          <p className="hero-sub">
-            An intimate retreat in the heart of Sitapura, Jaipur — where
-            affordability meets the warmth of genuine hospitality.
-          </p>
+          <p className="hero-sub">{subtitle}</p>
 
           <div className="hero-ctas">
-            <Link href="#rooms" className="btn-primary">
-              Explore Rooms
+            <Link href={primaryBtnLink} className="btn-primary">
+              {primaryBtnLabel}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="9,18 15,12 9,6" />
               </svg>
             </Link>
-            <Link href="#about" className="btn-outline">
-              Our Story
+            <Link href={secondaryBtnLink} className="btn-outline">
+              {secondaryBtnLabel}
             </Link>
           </div>
         </div>

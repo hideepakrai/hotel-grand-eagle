@@ -20,6 +20,7 @@ export const NAV_GROUPS = [
             { id: "hk", label: "Housekeeping", Icon: Ic.HK },
             { id: "maint", label: "Maintenance", Icon: Ic.Maint },
             { id: "staff", label: "Staff", Icon: Ic.Staff },
+            { id: "testimonials", label: "Testimonials", Icon: Ic.Customers },
         ]
     },
     {

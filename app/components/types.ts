@@ -273,10 +273,41 @@ export interface PageBlock {
     columns?: any[][];
 }
 
+// ── About Page CMS types ──────────────────────────────────────────────────────
+
+export interface AboutStat {
+    id: string;
+    value: string;   // e.g. "24+"
+    label: string;   // e.g. "Years of Luxury"
+}
+
+export interface TextImageSection {
+    id: string;
+    type: "text-image";
+    heading: string;
+    subheading?: string;
+    description: string;        // full paragraph text
+    highlightTerms: string;     // comma-separated terms to auto-bold in gold
+    image: string;              // URL or data URI
+    imagePosition: "left" | "right";
+    stats: AboutStat[];
+}
+
+export interface QuoteSection {
+    id: string;
+    type: "quote";
+    eyebrow: string;
+    text: string;
+}
+
+export type AboutSection = TextImageSection | QuoteSection;
+
 export interface CMSPage {
     id: string;
     title: string;
     slug: string;
+    subtitle?: string;              // eyebrow / tagline (e.g. "Our Heritage")
+    sections?: AboutSection[];      // used by About Page CMS
     content: PageBlock[];
     metaTitle?: string;
     metaDescription?: string;
@@ -286,10 +317,74 @@ export interface CMSPage {
     updatedAt: string;
 }
 
+// ── Home Page CMS types ───────────────────────────────────────────────────────
+
+export interface HomeStat {
+    id: string;
+    value: string;   // e.g. "24+"
+    label: string;   // e.g. "Years of Excellence"
+}
+
+export interface HomePillar {
+    id: string;
+    icon: string;    // Emoji or icon name
+    title: string;
+    desc: string;
+}
+
+export interface HeroSection {
+    id: string;
+    type: "hero";
+    title: string;              // Main headline e.g. "Smart, Simple"
+    titleEm: string;            // Italic/gold word e.g. "Comfort"
+    subtitle: string;           // Paragraph below headline
+    primaryButtonLabel: string;
+    primaryButtonLink: string;
+    secondaryButtonLabel: string;
+    secondaryButtonLink: string;
+    images: { url: string }[];  // Slider images
+    stats: HomeStat[];          // Stats shown below hero content
+}
+
+export interface HomeTextSection {
+    id: string;
+    type: "text-image";
+    heading: string;
+    subheading?: string;
+    description: string;
+    highlightTerms: string;
+    images: { url: string }[]; // Changed from single image for "Add Images" support
+    imagePosition: "left" | "right";
+    stats: HomeStat[];
+    pillars?: HomePillar[];
+}
+
+export interface HomeTestimonialsSection {
+    id: string;
+    type: "testimonials";
+    eyebrow: string;
+    heading: string;
+    headingEm: string;
+}
+
+export type HomeSection = HeroSection | HomeTextSection | HomeQuoteSection | HomeTestimonialsSection;
+
 export interface GalleryImage {
     id: string;
     url: string;
     label: string;
     order: number;
+    createdAt: string;
+}
+
+export interface Testimonial {
+    id: string;
+    name: string;
+    role: string;
+    location: string;
+    text: string;
+    rating: number;
+    img: string;
+    isActive: boolean;
     createdAt: string;
 }

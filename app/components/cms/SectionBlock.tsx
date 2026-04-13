@@ -91,6 +91,7 @@ export const SectionBlock: React.FC<SectionBlockProps> = ({
       ...(type === "cards" ? { items: [] } : {}),
       ...(type === "features" ? { items: [] } : {}),
       ...(type === "testimonial" ? { quote: "", author: "", role: "", avatar: "" } : {}),
+      ...(type === "hero" ? { title: "", subtitle: "", images: [], primaryButtonLabel: "", primaryButtonLink: "", secondaryButtonLabel: "", secondaryButtonLink: "" } : {}),
     };
 
     const newCols = [...(section.columns || [[]])];
@@ -292,6 +293,12 @@ export const SectionBlock: React.FC<SectionBlockProps> = ({
                    className="px-3 py-1.5 rounded-lg border border-emerald-100 bg-white text-[10px] font-bold text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all flex items-center gap-1.5 shadow-sm"
                 >
                   <Plus size={12} /> Card
+                </button>
+                <button
+                  onClick={() => addContentElement("hero", colIdx)}
+                  className="px-3 py-1.5 rounded-lg border border-amber-100 bg-white text-[10px] font-bold text-amber-600 hover:border-amber-200 hover:bg-amber-50 transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <Plus size={12} /> Hero
                 </button>
               </div>
             </div>

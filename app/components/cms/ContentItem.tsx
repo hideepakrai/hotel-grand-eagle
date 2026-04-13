@@ -16,7 +16,8 @@ import {
   Zap,
   Quote,
   GalleryHorizontal,
-  PlusCircle
+  PlusCircle,
+  Star
 } from "lucide-react";
 import { Btn, Inp, Sel } from "../ui";
 import { SectionBlock } from "./SectionBlock";
@@ -130,6 +131,70 @@ export const ContentItem: React.FC<ContentItemProps> = ({
               isFirst={isFirst}
               isLast={isLast}
             />
+          </div>
+        );
+
+      case "hero":
+        return (
+          <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">Hero Title</label>
+                 <Inp value={item.title || ""} onChange={(e) => onChange({ title: e.target.value })} placeholder="Main Heading" />
+              </div>
+              <div className="space-y-1.5">
+                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">Hero Subtitle</label>
+                 <Inp value={item.subtitle || ""} onChange={(e) => onChange({ subtitle: e.target.value })} placeholder="Sub heading or description" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+              <div className="space-y-3">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2">Primary Button</span>
+                <Inp value={item.primaryButtonLabel || ""} onChange={(e) => onChange({ primaryButtonLabel: e.target.value })} placeholder="Label (e.g. Explore Rooms)" />
+                <Inp value={item.primaryButtonLink || ""} onChange={(e) => onChange({ primaryButtonLink: e.target.value })} placeholder="Link URL" />
+              </div>
+              <div className="space-y-3">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2">Secondary Button</span>
+                <Inp value={item.secondaryButtonLabel || ""} onChange={(e) => onChange({ secondaryButtonLabel: e.target.value })} placeholder="Label (e.g. Our Story)" />
+                <Inp value={item.secondaryButtonLink || ""} onChange={(e) => onChange({ secondaryButtonLink: e.target.value })} placeholder="Link URL" />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">Hero Images (Slider)</span>
+              {(item.images || []).map((imgObj: any, idx: number) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex-1 flex flex-col gap-2 relative">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-500">Image {idx + 1}</span>
+                      <MediaLibraryModal onSelect={(m) => {
+                          const newImages = [...item.images];
+                          newImages[idx] = { url: m.url };
+                          onChange({ images: newImages });
+                      }} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Inp value={imgObj.url || ""} onChange={(e) => {
+                        const newImages = [...item.images];
+                        newImages[idx] = { url: e.target.value };
+                        onChange({ images: newImages });
+                      }} placeholder="Image URL" className="flex-1" />
+                      <button className="btn btn-ghost" style={{ padding: '6px', color: '#f43f5e' }} onClick={() => {
+                        const newImages = item.images.filter((_: any, i: number) => i !== idx);
+                        onChange({ images: newImages });
+                      }}>
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button className="btn btn-outline" style={{ width: '100%', fontSize: '11px', padding: '6px', borderStyle: 'dashed' }} onClick={() => {
+                const newImages = [...(item.images || []), { url: "" }];
+                onChange({ images: newImages });
+              }}>+ Add Image to Slider</button>
+            </div>
           </div>
         );
 
@@ -516,6 +581,7 @@ export const ContentItem: React.FC<ContentItemProps> = ({
       case "features": return <Zap size={14} />;
       case "testimonial": return <Quote size={14} />;
       case "carousel": return <GalleryHorizontal size={14} />;
+      case "hero": return <Star size={14} />;
       default: return <FileText size={14} />;
     }
   };

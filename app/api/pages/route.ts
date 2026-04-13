@@ -45,12 +45,14 @@ export async function POST(req: NextRequest) {
             id: body.id || `pg_${Date.now()}`,
             title: body.title,
             slug: body.slug,
-            content: body.content || "",
+            subtitle: body.subtitle || "",
+            sections: body.sections || [],
+            content: body.content || [],
             metaTitle: body.metaTitle || "",
             metaDescription: body.metaDescription || "",
             image: body.image || "",
             isPublished: body.isPublished ?? false,
-            createdAt: now,
+            createdAt: body.createdAt || now,
             updatedAt: now,
         };
 
@@ -59,5 +61,44 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error("POST /api/pages error:", error);
         return NextResponse.json({ error: "Failed to create page" }, { status: 500 });
+    }
+}
+
+// PUT /api/pages — upsert by slug (used by About Page editor)
+export async function PUT(req: NextRequest) {
+    try {
+        const body = await req.json();
+        const db = await getDatabase();
+
+        if (!body.slug) {
+            return NextResponse.json({ error: "Slug is required for upsert" }, { status: 400 });
+        }
+
+        const now = new Date().toISOString();
+        const updateData = {
+            id: body.id || `pg_${Date.now()}`,
+            title: body.title || "",
+            slug: body.slug,
+            subtitle: body.subtitle || "",
+            sections: body.sections || [],
+            content: body.content || [],
+            metaTitle: body.metaTitle || "",
+            metaDescription: body.metaDescription || "",
+            image: body.image || "",
+            isPublished: body.isPublished ?? false,
+            createdAt: body.createdAt || now,
+            updatedAt: now,
+        };
+
+        await db.collection("pages").updateOne(
+            { slug: body.slug },
+            { $set: updateData },
+            { upsert: true }
+        );
+
+        return NextResponse.json({ success: true, page: updateData });
+    } catch (error) {
+        console.error("PUT /api/pages error:", error);
+        return NextResponse.json({ error: "Failed to upsert page" }, { status: 500 });
     }
 }
