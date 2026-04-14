@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 import type { CMSPage, AboutSection, TextImageSection, QuoteSection } from "../../components/types";
 
 // ── Highlight helper ──────────────────────────────────────────────────────────
@@ -48,29 +49,6 @@ function renderParagraphs(description: string, highlightTerms: string) {
     );
 }
 
-// ── Static fallback data ──────────────────────────────────────────────────────
-
-const FALLBACK_TITLE = "A legacy of excellence";
-const FALLBACK_SUBTITLE = "Our Heritage";
-const FALLBACK_SECTIONS: AboutSection[] = [
-    {
-        id: "fb_1",
-        type: "text-image",
-        heading: "Budget-Friendly Stay in Jaipur",
-        subheading: "",
-        description: "Hotel Grand Eagle is a value-for-money hotel offering clean, well-furnished rooms tailored for both business travelers and tourists. Each room is thoughtfully equipped with essentials such as air conditioning, private bathrooms, comfortable chairs, work desks, telephones, televisions, and 24/7 hot and cold water supply—everything you need for a comfortable yet affordable stay.\n\nLocated near JECC, major transport hubs, and local food joints, our hotel is perfect for budget-conscious travelers seeking convenience and accessibility. With a focus on cleanliness, functionality, and friendly service, Hotel Grand Eagle is the ideal pick for short or extended stays in Jaipur's Sitapura Industrial Area.",
-        highlightTerms: "value-for-money hotel, air conditioning, private bathrooms, comfortable chairs, work desks, telephones, televisions, 24/7 hot and cold water supply, comfortable yet affordable stay, JECC, transport hubs, local food joints, budget-conscious travelers, cleanliness, functionality, friendly service, short or extended stays",
-        image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=800",
-        imagePosition: "right",
-        stats: [{ id: "s1", value: "24+", label: "Years of Luxury" }],
-    },
-    {
-        id: "fb_2",
-        type: "quote",
-        eyebrow: "The Vision",
-        text: "\"We created Grand Eagle as a love letter to Jaipur — a space where guests don't just visit, they belong.\"",
-    },
-];
 
 // ── Section Renderers ─────────────────────────────────────────────────────────
 
@@ -167,26 +145,37 @@ function QuoteSectionRender({ sec }: { sec: QuoteSection }) {
 
 export default function AboutPage() {
     const [cmsData, setCmsData] = useState<CMSPage | null>(null);
-    const [loaded, setLoaded] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetch("/api/pages?slug=about")
-            .then(r => {
-                if (!r.ok) return null;
-                return r.json();
-            })
+            .then(r => r.ok ? r.json() : null)
             .then(d => {
                 if (d && d.slug === "about") setCmsData(d);
             })
             .catch(() => {})
-            .finally(() => setLoaded(true));
+            .finally(() => setLoading(false));
     }, []);
 
-    // Use CMS data if available and published, otherwise fall back to static
+    if (loading) return <Loading />;
+
+    // Use CMS data if available and published
     const isUsing = cmsData?.isPublished && cmsData?.sections && cmsData.sections.length > 0;
-    const title = isUsing ? cmsData!.title : FALLBACK_TITLE;
-    const subtitle = isUsing ? (cmsData!.subtitle || FALLBACK_SUBTITLE) : FALLBACK_SUBTITLE;
-    const sections: AboutSection[] = isUsing ? cmsData!.sections! : FALLBACK_SECTIONS;
+    
+    if (!isUsing) {
+        return (
+            <div style={{ paddingTop: 160, paddingBottom: 112, background: "var(--midnight)", textAlign: "center", color: "var(--ivory-dim)" }}>
+                <div className="max-w">
+                    <h1 className="font-display" style={{ fontSize: "32px", marginBottom: "20px" }}>Discovering our heritage...</h1>
+                    <p>We are currently curating our story for you. Please check back shortly.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const title = cmsData!.title || "About Us";
+    const subtitle = cmsData!.subtitle || "Our Heritage";
+    const sections: AboutSection[] = cmsData!.sections!;
 
     // Render the page title with italic last word (e.g. "A legacy of _excellence_")
     const renderTitle = (t: string) => {

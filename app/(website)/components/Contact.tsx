@@ -37,8 +37,7 @@ export default function Contact() {
             className="fade-in-up visible"
             style={{ fontSize: "14px", color: "var(--ivory-dim)", lineHeight: 1.8, maxWidth: "320px", marginBottom: "40px" }}
           >
-            Our reservations team is available around the clock to craft your perfect stay. Reach out and let us curate
-            the experience you deserve.
+            Our team is here to help you with bookings and any queries. Get in touch for a smooth and comfortable stay at Hotel Grand Eagle.
           </p>
 
           <div className="contact-details">

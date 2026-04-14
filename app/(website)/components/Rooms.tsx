@@ -30,26 +30,22 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 const DEFAULT_ICON = <IoShieldCheckmarkOutline />;
 
-export default function Rooms() {
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [amenities, setAmenities] = useState<AmenityCat[]>([]);
-  const [loading, setLoading] = useState(true);
+interface RoomsProps {
+  roomsData?: any[];
+  amenitiesData?: AmenityCat[];
+}
+
+export default function Rooms({ roomsData = [], amenitiesData = [] }: RoomsProps) {
+  const [rooms, setRooms] = useState<any[]>(roomsData);
+  const [amenities, setAmenities] = useState<AmenityCat[]>(amenitiesData);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/room-types").then(r => r.json()),
-      fetch("/api/amenities").then(r => r.json())
-    ])
-      .then(([rData, aData]) => {
-        if (Array.isArray(rData)) setRooms(rData);
-        if (Array.isArray(aData)) setAmenities(aData);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    setRooms(roomsData);
+    setAmenities(amenitiesData);
+  }, [roomsData, amenitiesData]);
 
   useEffect(() => {
-    if (loading || rooms.length === 0) return;
+    if (rooms.length === 0) return;
     const timeoutId = setTimeout(() => {
       const fadeEls = document.querySelectorAll('.fade-in-up');
       const observer = new IntersectionObserver((entries) => {
@@ -63,7 +59,7 @@ export default function Rooms() {
       fadeEls.forEach(el => observer.observe(el));
     }, 100);
     return () => clearTimeout(timeoutId);
-  }, [rooms, loading]);
+  }, [rooms]);
 
   // Find "Basic" amenities category
   const basicAmenitiesCat = amenities.find(c => 
@@ -93,42 +89,18 @@ export default function Rooms() {
           >
             Well-designed rooms offering comfort, convenience, and everything you need for a relaxing stay.
           </p>
-          <Link
-            href="/rooms"
-            className="fade-in-up visible"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "12px",
-              color: "var(--gold)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            View All
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </Link>
         </div>
       </div>
 
       <div className="max-w">
-        {loading ? (
-          <div style={{ width: "100%", textAlign: "center", color: "var(--gold)", padding: "80px 0", letterSpacing: "0.2em", textTransform: "uppercase", fontSize: "12px" }}>
-            Discovery in progress...
-          </div>
-        ) : rooms.length === 0 ? (
+        {rooms.length === 0 ? (
           <div style={{ width: "100%", textAlign: "center", color: "var(--ivory-dim)", padding: "80px 0" }}>
             Our sanctuaries are currently being prepared. Check back soon.
           </div>
         ) : isSingleRoom ? (
           <div className="single-room-layout fade-in-up visible">
             <div className="room-card" style={{ width: "100%", maxWidth: "420px", margin: 0 }}>
-              <Link href={`/rooms/${rooms[0].slug}`} className="room-img-wrap" style={{ display: 'block' }}>
+              <Link href={`/room/${rooms[0]?.id}`} className="room-img-wrap" style={{ display: 'block' }}>
                 <img
                   src={rooms[0].images?.[0] || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800"}
                   alt={rooms[0].roomName}
@@ -141,7 +113,7 @@ export default function Rooms() {
               </Link>
               <div className="room-body">
                 <div className="room-cat">{rooms[0].roomCategory}</div>
-                <Link href={`/rooms/${rooms[0].slug}`} className="room-name font-display" style={{ display: 'block', textDecoration: 'none' }}>
+                <Link href={`/room/${rooms[0]?.id}`} className="room-name font-display" style={{ display: 'block', textDecoration: 'none' }}>
                   {rooms[0].roomName}
                 </Link>
                 <div className="room-meta">
@@ -166,7 +138,7 @@ export default function Rooms() {
                   <span className="tag">Mini Bar</span>
                   <span className="tag">24hr Service</span>
                 </div>
-                <Link href={`/rooms/${rooms[0].slug}`} className="btn-room" style={{ textDecoration: 'none' }}>
+                <Link href={`/room/${rooms[0]?.id}`} className="btn-room" style={{ textDecoration: 'none' }}>
                   View Details
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7" />
@@ -202,7 +174,7 @@ export default function Rooms() {
           <div className="rooms-scroll fade-in-up visible">
             {rooms.map((room, idx) => (
               <div key={idx} className="room-card">
-                <Link href={`/rooms/${room.slug}`} className="room-img-wrap" style={{ display: 'block' }}>
+                <Link href={`/room/${room?.id}`} className="room-img-wrap" style={{ display: 'block' }}>
                   <img
                     src={room.images?.[0] || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800"}
                     alt={room.roomName}
@@ -215,7 +187,7 @@ export default function Rooms() {
                 </Link>
                 <div className="room-body">
                   <div className="room-cat">{room.roomCategory}</div>
-                  <Link href={`/rooms/${room.slug}`} className="room-name font-display" style={{ display: 'block', textDecoration: 'none' }}>
+                  <Link href={`/room/${room?.id}`} className="room-name font-display" style={{ display: 'block', textDecoration: 'none' }}>
                     {room.roomName}
                   </Link>
                   <div className="room-meta">
@@ -240,7 +212,7 @@ export default function Rooms() {
                     <span className="tag">Mini Bar</span>
                     <span className="tag">24hr Service</span>
                   </div>
-                  <Link href={`/rooms/${room.slug}`} className="btn-room" style={{ textDecoration: 'none' }}>
+                  <Link href={`/room/${room?.id}`} className="btn-room" style={{ textDecoration: 'none' }}>
                     View Details
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" strokeWidth="2">
                       <path d="M5 12h14M12 5l7 7-7 7" />

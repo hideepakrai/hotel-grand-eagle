@@ -20,9 +20,9 @@ export default function VelourFooter() {
             <div style={{ marginBottom: "20px" }}>
               <img src="/logo.png" alt="HOTEL GRAND EAGLE" style={{ height: "50px", width: "auto", objectFit: "contain" }} />
             </div>
-            <p style={{ fontSize: "13px", color: "var(--ivory-dim)", lineHeight: "1.7", maxWidth: "300px" }}>
-              Experience the legacy of Rajasthani hospitality at Hotel Grand Eagle. A sanctuary of refinement in the heart 
-              of Sitapura, Jaipur, where heritage meets exceptional service.
+            <p style={{ fontSize: "13px", color: "var(--ivory-dim)", lineHeight: "1.7", maxWidth: "400px" }}>
+              Experience the charm of comfortable living at Hotel Grand Eagle. A thoughtfully designed stay in the heart 
+              of Sitapura, Jaipur, offering essential amenities, clean spaces, and warm hospitality for a truly pleasant experience.
             </p>
             <div style={{ display: "flex", gap: "10px", marginTop: "24px" }}>
               <a href="#" title="Facebook" style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold)", textDecoration: "none", transition: "all 0.3s ease", border: "1px solid rgba(212,168,87,0.15)" }} onMouseEnter={(e) => { e.currentTarget.style.background = "var(--gold)"; e.currentTarget.style.color = "var(--midnight)"; e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.transform = "translateY(0)"; }}>
@@ -42,13 +42,13 @@ export default function VelourFooter() {
             <div style={{ fontSize: "11px", color: "var(--gold)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "20px", fontWeight: "600" }}>Quick Links</div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
               <li>
-                <Link href="/rooms" style={{ fontSize: "13px", color: "var(--ivory-dim)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--gold)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--ivory-dim)"}>
-                  Rooms
+                <Link href="/about" style={{ fontSize: "13px", color: "var(--ivory-dim)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--gold)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--ivory-dim)"}>
+                  About
                 </Link>
               </li>
               <li>
-                <Link href="/about" style={{ fontSize: "13px", color: "var(--ivory-dim)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--gold)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--ivory-dim)"}>
-                  About
+                <Link href="/nearby" style={{ fontSize: "13px", color: "var(--ivory-dim)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--gold)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--ivory-dim)"}>
+                  Nearby
                 </Link>
               </li>
               <li>
@@ -82,13 +82,35 @@ export default function VelourFooter() {
 
         {/* Footer Bar */}
         <div style={{ borderTop: "1px solid rgba(212,168,87,0.1)", paddingTop: "20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-          <span style={{ fontSize: "11px", color: "rgba(200,192,176,0.5)", letterSpacing: "0.05em" }}>
-            © {new Date().getFullYear()} {hotel?.name || 'Hotel Grand Eagle'}. All rights reserved.
-          </span>
-          <div style={{ display: "flex", gap: "20px" }}>
-            <Link href="#" style={{ fontSize: "11px", color: "rgba(200,192,176,0.6)", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link href="#" style={{ fontSize: "11px", color: "rgba(200,192,176,0.6)", textDecoration: "none" }}>Terms of Service</Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span style={{ fontSize: "11px", color: "rgba(200,192,176,0.5)", letterSpacing: "0.05em" }}>
+              © {new Date().getFullYear()} {hotel?.name || 'Hotel Grand Eagle'}. All rights reserved.
+            </span>
+            <span style={{ fontSize: "10px", color: "var(--gold)", letterSpacing: "0.05em", opacity: 0.8 }}>
+              By Codified Web Solutions
+            </span>
           </div>
+          <div id="footer-legal-links" style={{ display: "flex", gap: "20px" }}>
+            <Link 
+              href="/privacy-policy" 
+              className="footer-link"
+              style={{ fontSize: "11px", color: "rgba(200,192,176,0.6)", textDecoration: "none", transition: "color 0.3s ease" }}
+            >
+              Privacy Policy
+            </Link>
+            <Link 
+              href="/terms-of-service" 
+              className="footer-link"
+              style={{ fontSize: "11px", color: "rgba(200,192,176,0.6)", textDecoration: "none", transition: "color 0.3s ease" }}
+            >
+              Terms of Service
+            </Link>
+          </div>
+          <style>{`
+            .footer-link:hover {
+              color: var(--gold) !important;
+            }
+          `}</style>
         </div>
       </div>
     </footer>

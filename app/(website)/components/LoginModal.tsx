@@ -15,16 +15,38 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+
+        // Validation
+        const input = emailOrPhone.trim();
+        const isNumeric = /^\d+$/.test(input);
+        const isEmail = input.includes('@') || /[a-zA-Z]/.test(input);
+
+        if (isNumeric) {
+            if (input.length !== 10) {
+                setError("Enter a valid 10-digit phone number");
+                return;
+            }
+        } else if (isEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(input)) {
+                setError("Enter a valid email address");
+                return;
+            }
+        } else {
+            setError("Enter a valid email or phone number");
+            return;
+        }
+
         setLoading(true);
 
         try {
             const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
             const payload = isLogin 
-                ? { emailOrPhone, password }
+                ? { emailOrPhone: input, password }
                 : { 
                     name, 
-                    email: emailOrPhone.includes('@') ? emailOrPhone : "", 
-                    phone: !emailOrPhone.includes('@') ? emailOrPhone : "", 
+                    email: !isNumeric ? input : "", 
+                    phone: isNumeric ? input : "", 
                     password 
                   };
 

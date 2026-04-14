@@ -133,6 +133,11 @@ function BookingForm() {
     const [checkIn, setCheckIn] = useState(searchParams?.get("checkIn") || dtIn);
     const [checkOut, setCheckOut] = useState(searchParams?.get("checkOut") || dtOut);
     const [guests, setGuests] = useState(Number(searchParams?.get("guests")) || 2);
+    
+    const [loading, setLoading] = useState(false);
+    const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
+    const [selectedRoomId, setSelectedRoomId] = useState("");
+    const [preSelectedRoom, setPreSelectedRoom] = useState<Room | null>(null);
 
     const handleCheckInChange = (val: string) => {
         const newIn = new Date(val);
@@ -146,10 +151,22 @@ function BookingForm() {
         setCheckIn(val);
         setCheckOut(newOut);
     };
-    
-    const [loading, setLoading] = useState(false);
-    const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
-    const [selectedRoomId, setSelectedRoomId] = useState("");
+
+    useEffect(() => {
+        if (initialSlug) {
+            fetch("/api/room-types")
+                .then(r => r.json())
+                .then((data: Room[]) => {
+                    const match = data.find(r => r.slug === initialSlug);
+                    if (match) {
+                        setPreSelectedRoom(match);
+                        setSelectedRoomId(match.id);
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [initialSlug]);
+
     const [selectedMealPlanId, setSelectedMealPlanId] = useState("");
     const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
     
@@ -186,6 +203,9 @@ function BookingForm() {
             
             const availableTypes = rtData.filter(rt => physicalRooms.some(pr => pr.roomTypeId === rt.id));
             setAvailableRooms(availableTypes);
+
+            // If we have a pre-selected room and it's available, we could potentially skip to it
+            // But for now, just filtering availableTypes or prioritizing them is better
             setStep(2);
         } catch (err) { console.error(err); } 
         finally { setLoading(false); }
@@ -321,6 +341,25 @@ function BookingForm() {
                 {step === 1 && (
                     <div className="fade-in-up" style={{ maxWidth: 800, margin: "0 auto" }}>
                         <div className="form-card" style={{ padding: "clamp(28px, 5vw, 60px)" }}>
+                            {preSelectedRoom && (
+                                <div style={{ 
+                                    background: "rgba(212,168,87,0.08)", 
+                                    border: "1px solid rgba(212,168,87,0.2)", 
+                                    padding: "16px 24px", 
+                                    marginBottom: "32px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "16px"
+                                }}>
+                                    <div style={{ width: "48px", height: "48px", borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                                        <img src={preSelectedRoom.images?.[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: "10px", color: "var(--gold)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Selected Collection</div>
+                                        <div className="font-display" style={{ fontSize: "18px", color: "var(--ivory)" }}>{preSelectedRoom.roomName}</div>
+                                    </div>
+                                </div>
+                            )}
                             <h2 className="section-title font-display" style={{ fontSize: "clamp(28px, 5vw, 42px)", textAlign: "center", marginBottom: 40 }}>Check <em>Room Availability</em></h2>
                             
                             <form onSubmit={handleSearch} className="book-search-form">
