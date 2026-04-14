@@ -4,15 +4,14 @@ import { useAdmin } from "@/app/components/AdminContext";
 import ReportsPage from "@/app/components/Reports";
 
 export default function AdminReportsPage() {
-    const { bookings, customers, roomTypes, rooms, currency } = useAdmin();
+    const { bookings, mealPlans, hkTasks, roomTypes } = useAdmin();
 
     return (
         <ReportsPage 
             bookings={bookings} 
-            customers={customers} 
-            roomTypes={roomTypes} 
-            rooms={rooms} 
-            currency={currency} 
+            rooms={roomTypes} 
+            mealPlans={mealPlans}
+            hkTasks={hkTasks}
         />
     );
 }

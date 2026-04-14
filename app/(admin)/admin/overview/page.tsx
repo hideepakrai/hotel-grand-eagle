@@ -4,12 +4,13 @@ import { useAdmin } from "@/app/components/AdminContext";
 import HotelOverview from "@/app/components/HotelOverview";
 
 export default function AdminOverviewPage() {
-    const { hotel, updateHotel } = useAdmin();
+    const { hotel, roomTypes, updateHotel } = useAdmin();
 
     return (
         <HotelOverview 
             hotel={hotel} 
-            onSave={updateHotel} 
+            rooms={roomTypes}
+            onUpdate={updateHotel} 
         />
     );
 }

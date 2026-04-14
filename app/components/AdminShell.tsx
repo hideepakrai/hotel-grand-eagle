@@ -74,7 +74,7 @@ export function Sidebar() {
 }
 
 export function SearchOverlay() {
-    const { bookings, customers, roomTypes, setPage, setSearchOpen } = useAdmin();
+    const { bookings, customers, roomTypes, setSearchOpen } = useAdmin();
     const [q, setQ] = useState("");
     
     const results = useMemo(() => {

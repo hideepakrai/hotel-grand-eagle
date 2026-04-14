@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback } from "react";
-import { Ic, Btn, Badge, Inp, FieldLabel, Sel, CurrencyInput, Toggle, clamp, uid } from "./ui";
+import { Ic, Btn, Badge, Inp, Field, FieldLabel, Sel, CurrencyInput, Toggle, clamp, uid } from "./ui";
 import type { Room, Pricing, PricingRule, SeasonalPrice } from "./types";
 
 export default function AdminPricingPage({ rooms, pricing, setPricing, pricingRules, setPricingRules, currency, setCurrency }: {
@@ -45,7 +45,7 @@ export default function AdminPricingPage({ rooms, pricing, setPricing, pricingRu
                                 </div>
                                 {room.extraBedPrice > 0 && <div><FieldLabel>Extra Bed</FieldLabel><div style={{ fontSize: 16, fontWeight: 600 }}>+{room.extraBedPrice}</div></div>}
                                 <div><FieldLabel>Weekend Pricing</FieldLabel><div style={{ paddingTop: 4 }}><Toggle checked={p.weekendPricingEnabled} onChange={v => upd(room.id, "weekendPricingEnabled", v)} label={p.weekendPricingEnabled ? "Enabled" : "Disabled"} /></div></div>
-                                {p.weekendPricingEnabled && <FieldLabel label={`Weekend Price (${currency})`}><CurrencyInput currency={currency} value={p.weekendPrice} onChange={e => upd(room.id, "weekendPrice", clamp(Number(e.target.value), 0, Infinity))} /></FieldLabel>}
+                                {p.weekendPricingEnabled && <Field label={`Weekend Price (${currency})`}><CurrencyInput currency={currency} value={p.weekendPrice} onChange={e => upd(room.id, "weekendPrice", clamp(Number(e.target.value), 0, Infinity))} /></Field>}
                             </div>
                             {/* Seasonal */}
                             <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 16, marginBottom: 16 }}>
