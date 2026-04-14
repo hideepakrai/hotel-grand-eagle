@@ -123,26 +123,6 @@ export default function NearbyPage() {
                     </div>
                 </div>
 
-                {/* Getting Around */}
-                <div style={{ borderTop: "1px solid rgba(212,168,87,0.1)", marginTop: 112, paddingTop: 80 }}>
-                    <div className="section-eyebrow fade-in-up" style={{ justifyContent: "center" }}>
-                        <span>The Journey</span>
-                    </div>
-                    <h2 className="section-title fade-in-up" style={{ fontSize: 32, textAlign: "center", marginBottom: 48 }}>Getting <em>Around</em></h2>
-                    
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32 }}>
-                        {[
-                            { title: "Personal Concierge", text: "Our team can arrange private luxury chauffeured cars for your city tours and transfers." },
-                            { title: "App Services", text: "Uber and Ola are readily available in the area for quick and easy independent travel." },
-                            { title: "Local Explorer", text: "Short distance commutes to JECC or local shopping are best handled via traditional e-rickshaws." }
-                        ].map((m, i) => (
-                            <div key={i} className="fade-in-up" style={{ background: "rgba(212,168,87,0.03)", border: "1px solid rgba(212,168,87,0.05)", padding: 32 }}>
-                                <h4 style={{ color: "var(--gold)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>{m.title}</h4>
-                                <p style={{ fontSize: 14, color: "var(--ivory-dim)", lineHeight: 1.6 }}>{m.text}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
         </div>
     );

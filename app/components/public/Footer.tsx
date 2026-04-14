@@ -12,7 +12,7 @@ export default function Footer() {
             .then(data => {
                 if (data.name) setHotel(data);
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     return (
@@ -35,7 +35,7 @@ export default function Footer() {
                         <a href="#" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#f59e0b] hover:text-white transition-all">TW</a>
                     </div>
                 </div>
-                
+
                 <div>
                     <h3 className="text-white font-semibold tracking-wider text-sm mb-6 uppercase">Quick Links</h3>
                     <ul className="space-y-3 text-sm">
@@ -65,7 +65,7 @@ export default function Footer() {
                 </div>
             </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-gray-800 text-sm text-center text-gray-500 flex flex-col md:flex-row justify-between items-center">
-                <p>&copy; {new Date().getFullYear()} {hotel?.name || "Hotel Grand Eagle"}. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} {hotel?.name || "Hotel Grand Eagle"}. All rights reserved.<br />Developed By <a href="https://www.codifiedwebsolutions.com/" target="_blank" rel="noopener noreferrer">Codified Web Solutions</a></p>
                 <div className="space-x-4 mt-4 md:mt-0">
                     <Link href="#" className="hover:text-gray-300">Privacy Policy</Link>
                     <Link href="#" className="hover:text-gray-300">Terms of Service</Link>

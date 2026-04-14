@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Rooms from "./components/Rooms";
 import Testimonials from "./components/Testimonials";
 import Contact from "./components/Contact";
-import type { CMSPage, HeroSection, HomeTextSection, HomeQuoteSection, HomeTestimonialsSection, TextImageSection, AboutSection } from "../components/types";
+import Loading from "./components/Loading";
+import type { CMSPage, HeroSection, HomeTextSection, HomeQuoteSection, HomeTestimonialsSection, TextImageSection, AboutSection, AmenityCat } from "../components/types";
 
 // ─── Highlight helper (same as About page) ────────────────────────────────────
 
@@ -81,7 +82,7 @@ function HeroRenderer({ sec }: { sec: HeroSection }) {
     const titleEm = sec.titleEm || "Comfort";
     const subtitle = sec.subtitle || "An intimate retreat in the heart of Sitapura, Jaipur — where affordability meets the warmth of genuine hospitality.";
     const primaryBtnLabel = sec.primaryButtonLabel || "Explore Rooms";
-    const primaryBtnLink = sec.primaryButtonLink || "#rooms";
+    const primaryBtnLink = sec.primaryButtonLink === "/rooms" ? "/book" : (sec.primaryButtonLink || "#rooms");
     const secondaryBtnLabel = sec.secondaryButtonLabel || "Our Story";
     const secondaryBtnLink = sec.secondaryButtonLink || "#about";
     const stats = sec.stats?.length > 0 ? sec.stats : [
@@ -338,36 +339,28 @@ function QuoteRenderer({ sec }: { sec: HomeQuoteSection }) {
     );
 }
 
-// ─── Static fallback (when no CMS data) ──────────────────────────────────────
-
-const STATIC_HERO: HeroSection = {
-    id: "static_hero",
-    type: "hero",
-    title: "Smart, Simple",
-    titleEm: "Comfort",
-    subtitle: "An intimate retreat in the heart of Sitapura, Jaipur — where affordability meets the warmth of genuine hospitality.",
-    primaryButtonLabel: "Explore Rooms",
-    primaryButtonLink: "#rooms",
-    secondaryButtonLabel: "Our Story",
-    secondaryButtonLink: "#about",
-    images: [{ url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop" }],
-    stats: [
-        { id: "s1", value: "24+", label: "Years of Excellence" },
-        { id: "s2", value: "340+", label: "Happy Guests" },
-        { id: "s3", value: "4.9", label: "Guest Rating" },
-    ],
-};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
     const [cmsData, setCmsData] = useState<CMSPage | null>(null);
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [amenities, setAmenities] = useState<AmenityCat[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("/api/pages?slug=home")
-            .then(r => r.ok ? r.json() : null)
-            .then(d => { if (d?.slug === "home") setCmsData(d); })
-            .catch(() => {});
+        Promise.all([
+            fetch("/api/pages?slug=home").then(r => r.ok ? r.json() : null),
+            fetch("/api/room-types").then(r => r.ok ? r.json() : []),
+            fetch("/api/amenities").then(r => r.ok ? r.json() : [])
+        ])
+        .then(([cms, rData, aData]) => {
+            if (cms?.slug === "home") setCmsData(cms);
+            if (Array.isArray(rData)) setRooms(rData);
+            if (Array.isArray(aData)) setAmenities(aData);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
     }, []);
 
     // Scroll animation observer
@@ -389,7 +382,10 @@ export default function HomePage() {
     }, [cmsData]);
 
     const useCMS = cmsData?.isPublished && cmsData?.sections && (cmsData.sections as any[]).length > 0;
-    const sections: any[] = useCMS ? (cmsData!.sections as any[]) : [STATIC_HERO];
+    
+    if (loading) return <Loading />;
+
+    const sections: any[] = useCMS ? (cmsData!.sections as any[]) : [];
 
     // Find if there is a CMS-managed hero or a text-image "about" section
     const heroSection = sections.find(s => s.type === "hero") as HeroSection | undefined;
@@ -401,16 +397,13 @@ export default function HomePage() {
     return (
         <>
             {/* Hero */}
-            {heroSection
-                ? <HeroRenderer sec={heroSection} />
-                : <HeroRenderer sec={STATIC_HERO} />
-            }
+            {heroSection && <HeroRenderer sec={heroSection} />}
 
-            {/* Rooms (always rendered) */}
-            <Rooms />
+            {/* Rooms (passed fetched data) */}
+            <Rooms roomsData={rooms} amenitiesData={amenities} />
 
             {/* Dynamic CMS text/image and quote sections */}
-            {hasCustomAbout ? (
+            {hasCustomAbout && (
                 <>
                     {sections
                         .filter(s => s.type === "text-image" || s.type === "quote" || s.type === "testimonials")
@@ -422,9 +415,6 @@ export default function HomePage() {
                         })
                     }
                 </>
-            ) : (
-                /* Static About component as fallback */
-                <StaticAbout />
             )}
 
             {!testimSections.length && <Testimonials />}
@@ -433,57 +423,3 @@ export default function HomePage() {
     );
 }
 
-// ─── Static About fallback ────────────────────────────────────────────────────
-
-function StaticAbout() {
-    return (
-        <section id="about" style={{ padding: "112px 0", background: "#0E0E0E" }}>
-            <div className="max-w">
-                <div className="about-grid">
-                    <div className="about-imgs">
-                        <div className="about-gold-bar" />
-                        <div className="about-main-img fade-in-up visible">
-                            <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=800" alt="Hotel Grand Eagle" style={{ width: "100%", height: "110%", marginTop: "-5%", objectFit: "cover" }} />
-                            <div className="about-img-overlay" />
-                        </div>
-                        <div className="about-stat-card fade-in-up visible">
-                            <div className="about-stat-num font-display">24+</div>
-                            <div className="about-stat-label">Years of Excellence</div>
-                        </div>
-                    </div>
-                    <div className="about-text" style={{ fontSize: "1.05rem", lineHeight: "1.8", color: "#a0a0a0" }}>
-                        <div className="section-eyebrow fade-in-up visible">
-                            <div className="line" />
-                            <span>Our Heritage</span>
-                        </div>
-                        <h2 className="section-title fade-in-up visible" style={{ fontSize: 36, marginBottom: 32, lineHeight: 1.2, color: "var(--ivory)" }}>
-                            Budget-Friendly Stay in <em>Jaipur</em>
-                        </h2>
-                        <p className="fade-in-up visible" style={{ marginBottom: 20 }}>
-                            Hotel Grand Eagle is a <strong style={{ color: "var(--gold)" }}>value-for-money hotel</strong> offering clean, well-furnished rooms tailored for both business travelers and tourists.
-                        </p>
-                        <p className="fade-in-up visible">
-                            Located near <strong style={{ color: "var(--gold)" }}>JECC</strong>, major transport hubs, and local food joints, our hotel is perfect for <strong style={{ color: "var(--gold)" }}>budget-conscious travelers</strong> seeking convenience and accessibility.
-                        </p>
-                        <div className="pillars">
-                            {[
-                                { icon: "🌙", title: "Elegant Comfort", desc: "Thoughtfully designed spaces" },
-                                { icon: "🍽", title: "Fine Dining", desc: "Culinary excellence" },
-                                { icon: "✨", title: "Personalized Service", desc: "Tailored to your needs" },
-                                { icon: "📍", title: "Prime Location", desc: "Heart of Sitapura, Jaipur" },
-                            ].map(p => (
-                                <div key={p.title} className="pillar">
-                                    <div className="pillar-icon">{p.icon}</div>
-                                    <div>
-                                        <div className="pillar-title">{p.title}</div>
-                                        <div className="pillar-desc">{p.desc}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
