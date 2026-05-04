@@ -20,6 +20,20 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const db = await getDatabase();
+    // Backend validation
+    if (body.maxOccupancy !== undefined && (body.maxOccupancy < 1 || body.maxOccupancy > 20)) {
+      return NextResponse.json({ error: "Max occupancy must be between 1 and 20" }, { status: 400 });
+    }
+    if (body.roomSize !== undefined && (body.roomSize < 5 || body.roomSize > 2000)) {
+      return NextResponse.json({ error: "Room size must be between 5 and 2000 m²" }, { status: 400 });
+    }
+    if (body.basePrice !== undefined && body.basePrice < 0) {
+      return NextResponse.json({ error: "Base price cannot be negative" }, { status: 400 });
+    }
+    if (body.extraBedPrice !== undefined && body.extraBedPrice < 0) {
+      return NextResponse.json({ error: "Extra bed price cannot be negative" }, { status: 400 });
+    }
+
     await db.collection("room_types").insertOne(body);
     return NextResponse.json({ success: true, id: body.id });
   } catch (err) {
@@ -34,6 +48,20 @@ export async function PUT(req: Request) {
     const { id, ...data } = body;
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
     const db = await getDatabase();
+    // Backend validation
+    if (data.maxOccupancy !== undefined && (data.maxOccupancy < 1 || data.maxOccupancy > 20)) {
+      return NextResponse.json({ error: "Max occupancy must be between 1 and 20" }, { status: 400 });
+    }
+    if (data.roomSize !== undefined && (data.roomSize < 5 || data.roomSize > 2000)) {
+      return NextResponse.json({ error: "Room size must be between 5 and 2000 m²" }, { status: 400 });
+    }
+    if (data.basePrice !== undefined && data.basePrice < 0) {
+      return NextResponse.json({ error: "Base price cannot be negative" }, { status: 400 });
+    }
+    if (data.extraBedPrice !== undefined && data.extraBedPrice < 0) {
+      return NextResponse.json({ error: "Extra bed price cannot be negative" }, { status: 400 });
+    }
+
     const result = await db.collection("room_types").updateOne(
       { id },
       { $set: data }

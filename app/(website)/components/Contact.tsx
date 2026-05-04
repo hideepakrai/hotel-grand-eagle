@@ -121,11 +121,9 @@ export default function Contact() {
                   <option value="" disabled>
                     Number of Guests
                   </option>
-                  <option>1 Guest</option>
-                  <option>2 Guests</option>
-                  <option>3 Guests</option>
-                  <option>4 Guests</option>
-                  <option>5+ Guests</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(g => (
+                    <option key={g} value={`${g} Guest${g > 1 ? 's' : ''}`}>{g} Guest{g > 1 ? 's' : ''}</option>
+                  ))}
                 </select>
                 <textarea
                   className="form-textarea"

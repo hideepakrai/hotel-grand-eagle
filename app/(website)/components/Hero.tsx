@@ -13,6 +13,7 @@ export default function Hero() {
 
   const [checkIn, setCheckIn] = useState(today);
   const [checkOut, setCheckOut] = useState(tomorrow);
+  const [guests, setGuests] = useState(2);
 
   const handleCheckInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCheckIn = e.target.value;
@@ -206,19 +207,17 @@ export default function Hero() {
             </svg>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span className="booking-field-label">Guests</span>
-              <select defaultValue="2 Guests">
-                <option>1 Guest</option>
-                <option value="2 Guests">2 Guests</option>
-                <option>3 Guests</option>
-                <option>4 Guests</option>
-                <option>5+ Guests</option>
+              <select value={guests} onChange={e => setGuests(Number(e.target.value))}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(g => (
+                  <option key={g} value={g}>{g} Guest{g > 1 ? 's' : ''}</option>
+                ))}
               </select>
             </div>
           </label>
 
           <button
             className="btn-search"
-            onClick={() => router.push(`/book?checkIn=${checkIn}&checkOut=${checkOut}`)}
+            onClick={() => router.push(`/book?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`)}
           >
             Search Rooms
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

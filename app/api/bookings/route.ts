@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDatabase } from "@/app/utils/getDatabase";
 import { sendAdminBookingNotification } from "@/app/utils/email";
+import { Booking } from "@/app/components/types";
 
 /** Returns true if the given room has any overlapping active booking, excluding `excludeId` */
 async function hasRoomConflict(
@@ -36,7 +37,7 @@ export async function GET() {
 /** Normalise any booking document so it fully matches the admin Booking interface.
  *  Handles field-name mismatches from the website form (email/phone vs guestEmail/guestPhone)
  *  and provides safe defaults for every field. */
-function normalizeBooking(body: Record<string, unknown>): Record<string, unknown> {
+function normalizeBooking(body: Record<string, unknown>): Booking {
     // Resolve guest name
     const guestName = (body.guestName as string | undefined)?.trim()
         || `${body.firstName ?? ""} ${body.lastName ?? ""}`.trim()
@@ -112,12 +113,12 @@ function normalizeBooking(body: Record<string, unknown>): Record<string, unknown
         primaryAadharNo: (body.primaryAadharNo ?? "") as string,
         primaryAadharFileUrl: (body.primaryAadharFileUrl ?? "") as string,
         createdAt: (body.createdAt as string | undefined) ?? new Date().toISOString(),
-    };
+    } as Booking;
 }
 
 export async function POST(req: Request) {
     try {
-        const raw = await req.json();
+        const raw = await req.json() as Record<string, unknown>;
         const body = normalizeBooking(raw);
         const db = await getDatabase();
 
@@ -136,6 +137,14 @@ export async function POST(req: Request) {
                     { status: 409 }
                 );
             }
+        }
+
+        // Backend validation for adults and children
+        if (body.adults < 1 || body.adults > 10) {
+            return NextResponse.json({ error: "Adults count must be between 1 and 10." }, { status: 400 });
+        }
+        if (body.children < 0 || body.children > 20) {
+            return NextResponse.json({ error: "Children count must be between 0 and 20." }, { status: 400 });
         }
 
         const result = await db.collection("bookings").insertOne(body);
@@ -161,7 +170,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json() as Partial<Booking>;
         const { id, ...data } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
@@ -184,6 +193,14 @@ export async function PUT(req: Request) {
                     { status: 409 }
                 );
             }
+        }
+
+        // Backend validation for adults and children
+        if (data.adults !== undefined && (data.adults < 1 || data.adults > 10)) {
+            return NextResponse.json({ error: "Adults count must be between 1 and 10." }, { status: 400 });
+        }
+        if (data.children !== undefined && (data.children < 0 || data.children > 20)) {
+            return NextResponse.json({ error: "Children count must be between 0 and 20." }, { status: 400 });
         }
 
         // Always store INR

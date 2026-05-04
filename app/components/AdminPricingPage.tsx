@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback } from "react";
-import { Ic, Btn, Badge, Inp, Field, FieldLabel, Sel, CurrencyInput, Toggle, clamp, uid } from "./ui";
+import { Ic, Btn, Badge, Inp, NumInp, Field, FieldLabel, Sel, CurrencyInput, Toggle, clamp, uid } from "./ui";
 import type { Room, Pricing, PricingRule, SeasonalPrice } from "./types";
 
 export default function AdminPricingPage({ rooms, pricing, setPricing, pricingRules, setPricingRules, currency, setCurrency }: {
@@ -60,7 +60,7 @@ export default function AdminPricingPage({ rooms, pricing, setPricing, pricingRu
                                             <div><FieldLabel>Season Name</FieldLabel><Inp value={sp.seasonName} onChange={e => updSeason(room.id, sp.id, "seasonName", e.target.value)} placeholder="e.g. Eid, Summer" /></div>
                                             <div><FieldLabel>Start Date</FieldLabel><Inp type="date" value={sp.startDate} onChange={e => updSeason(room.id, sp.id, "startDate", e.target.value)} /></div>
                                             <div><FieldLabel>End Date</FieldLabel><Inp type="date" value={sp.endDate} onChange={e => updSeason(room.id, sp.id, "endDate", e.target.value)} /></div>
-                                            <div><FieldLabel>{`Price (${currency})`}</FieldLabel><CurrencyInput currency={currency} value={sp.price} onChange={e => updSeason(room.id, sp.id, "price", e.target.value)} /></div>
+                                            <div><FieldLabel>{`Price (${currency})`}</FieldLabel><NumInp value={sp.price} min={0} onChange={e => updSeason(room.id, sp.id, "price", e.target.value)} /></div>
                                             <Btn size="sm" variant="danger" onClick={() => delSeason(room.id, sp.id)}><Ic.Trash /></Btn>
                                         </div>
                                     ))}
@@ -83,7 +83,7 @@ export default function AdminPricingPage({ rooms, pricing, setPricing, pricingRu
                                             </div>
                                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                                 <span style={{ fontSize: 12, color: "#6b7280" }}>Discount</span>
-                                                <Inp type="number" value={String(Math.abs(rule.discount))} onChange={e => updRule(rule.id, "discount", Number(e.target.value))} style={{ width: 60, textAlign: "center" }} />
+                                                <NumInp value={Math.abs(rule.discount)} min={0} max={100} onChange={e => updRule(rule.id, "discount", clamp(Number(e.target.value), 0, 100))} style={{ width: 80 }} />
                                                 <span style={{ fontSize: 12, color: "#6b7280" }}>%</span>
                                                 <Badge color={rule.enabled ? "green" : "gray"}>{rule.enabled ? "Active" : "Off"}</Badge>
                                             </div>

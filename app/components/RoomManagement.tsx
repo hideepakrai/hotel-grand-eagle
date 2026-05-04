@@ -11,7 +11,7 @@ function RoomForm({ initial, amenityCats, onSave, onCancel }: { initial?: Room; 
     const [imgUrl, setImgUrl] = useState("");
     const [imgErr, setImgErr] = useState("");
     const s = (field: keyof Room) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF(p => ({ ...p, [field]: e.target.value, ...(field === "roomName" ? { slug: slugify(e.target.value) } : {}) }));
-    const sn = (field: keyof Room, mn: number, mx: number) => (e: React.ChangeEvent<HTMLInputElement>) => setF(p => ({ ...p, [field]: clamp(Number(e.target.value), mn, mx) }));
+    const sn = (field: keyof Room) => (e: React.ChangeEvent<HTMLInputElement>) => setF(p => ({ ...p, [field]: Number(e.target.value) }));
     const sb = (field: keyof Room) => (val: boolean) => setF(p => ({ ...p, [field]: val }));
     const facilityMap = useMemo(() => { const m: Record<string, string> = {}; amenityCats.forEach(c => c.facilities.forEach(f => { m[f.id] = f.name; })); return m; }, [amenityCats]);
     const toggleAmen = (id: string) => setF(p => ({ ...p, amenityIds: p.amenityIds.includes(id) ? p.amenityIds.filter(x => x !== id) : [...p.amenityIds, id] }));
@@ -59,14 +59,14 @@ function RoomForm({ initial, amenityCats, onSave, onCancel }: { initial?: Room; 
             <div className="card mb-16"><div className="card-header"><span className="card-title">Room Identity</span></div><div className="card-body">
                 <div className="grid-3" style={{ marginBottom: 16 }}><Field label="Room Name *"><Inp value={f.roomName} onChange={s("roomName")} placeholder="e.g. Deluxe King Room" /></Field><Field label="Slug (auto)"><Inp value={f.slug} onChange={s("slug")} /></Field><Field label="Room Category"><Sel value={f.roomCategory} onChange={s("roomCategory")} opts={ROOM_CATS} /></Field></div>
                 <div className="grid-3" style={{ marginBottom: 16 }}><Field label="Bed Type"><Sel value={f.bedType} onChange={s("bedType")} opts={BED_TYPES} /></Field><Field label="Room Theme"><Sel value={f.roomTheme} onChange={s("roomTheme")} opts={THEMES} /></Field><Field label="View"><Sel value={f.view} onChange={s("view")} opts={VIEWS} /></Field></div>
-                <div className="grid-4"><Field label="Max Occupancy"><NumInp value={f.maxOccupancy} onChange={sn("maxOccupancy", 1, 20)} min={1} max={20} /></Field><Field label="Room Size (m²)"><NumInp value={f.roomSize} onChange={sn("roomSize", 5, 2000)} min={5} /></Field><Field label="Floor Preference"><Sel value={f.floorPreference} onChange={s("floorPreference")} opts={FLOORS} /></Field><Field label="Smoking Policy"><Sel value={f.smokingPolicy} onChange={s("smokingPolicy")} opts={SMOKING} /></Field></div>
+                <div className="grid-4"><Field label="Max Occupancy"><NumInp value={f.maxOccupancy} onChange={sn("maxOccupancy")} min={1} max={20} /></Field><Field label="Room Size (m²)"><NumInp value={f.roomSize} onChange={sn("roomSize")} min={5} /></Field><Field label="Floor Preference"><Sel value={f.floorPreference} onChange={s("floorPreference")} opts={FLOORS} /></Field><Field label="Smoking Policy"><Sel value={f.smokingPolicy} onChange={s("smokingPolicy")} opts={SMOKING} /></Field></div>
             </div></div>
             <div className="card mb-16"><div className="card-header"><span className="card-title">Room Specifications</span></div><div className="card-body">
                 <div className="grid-3" style={{ marginBottom: 16 }}><Field label="Soundproofing"><Sel value={f.soundproofingLevel} onChange={s("soundproofingLevel")} opts={SOUNDPROOF} /></Field><Field label="Bathroom Type"><Sel value={f.bathroomType} onChange={s("bathroomType")} opts={BATHROOMS} /></Field><Field label="Entertainment"><Sel value={f.entertainmentOptions} onChange={s("entertainmentOptions")} opts={ENTERTAIN} /></Field></div>
                 <div style={{ display: "flex", gap: 32 }}><Toggle checked={f.balconyAvailable} onChange={sb("balconyAvailable")} label="Balcony Available" /><Toggle checked={f.inRoomWorkspace} onChange={sb("inRoomWorkspace")} label="In-Room Workspace" /></div>
             </div></div>
             <div className="card mb-16"><div className="card-header"><span className="card-title">Pricing</span></div><div className="card-body">
-                <div className="grid-4"><Field label="Currency"><div style={{ padding: "8px 10px", fontSize: 13, fontWeight: 600 }}>INR (₹)</div></Field><Field label={`Base Price (₹)`}><CurrencyInput currency="INR" value={f.basePrice} onChange={sn("basePrice", 0, 9999999)} /></Field><Field label={`Extra Bed (₹)`}><CurrencyInput currency="INR" value={f.extraBedPrice} onChange={sn("extraBedPrice", 0, 9999999)} /></Field><Field label="Cancellation"><div style={{ paddingTop: 6 }}><Toggle checked={f.refundable} onChange={sb("refundable")} label={f.refundable ? "Refundable" : "Non-Refundable"} /></div></Field></div>
+                <div className="grid-4"><Field label="Currency"><div style={{ padding: "8px 10px", fontSize: 13, fontWeight: 600 }}>INR (₹)</div></Field><Field label={`Base Price (₹)`}><CurrencyInput currency="INR" value={f.basePrice} onChange={sn("basePrice")} /></Field><Field label={`Extra Bed (₹)`}><CurrencyInput currency="INR" value={f.extraBedPrice} onChange={sn("extraBedPrice")} /></Field><Field label="Cancellation"><div style={{ paddingTop: 6 }}><Toggle checked={f.refundable} onChange={sb("refundable")} label={f.refundable ? "Refundable" : "Non-Refundable"} /></div></Field></div>
             </div></div>
             <div className="card mb-20"><div className="card-header"><span className="card-title">Amenities</span><span style={{ fontSize: 13, color: "#6b7280" }}>{f.amenityIds.length} selected</span></div><div className="card-body"><div className="amen-picker">{amenityCats.map(cat => (<div className="amen-pick-cat" key={cat.id}><div className="amen-pick-cat-name">{cat.name}</div><div className="amen-pick-pills">{cat.facilities.map(fc => { const on = f.amenityIds.includes(fc.id); return (<button key={fc.id} onClick={() => toggleAmen(fc.id)} className={`amen-pill ${on ? "on" : "off"}`}>{fc.name}</button>); })}</div></div>))}</div></div></div>
 
@@ -113,7 +113,22 @@ function RoomForm({ initial, amenityCats, onSave, onCancel }: { initial?: Room; 
                 </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}><Btn size="lg" onClick={() => onSave(f)} disabled={!f.roomName.trim()}>{initial ? "Update Room" : "Create Room"}</Btn><Btn variant="secondary" size="lg" onClick={onCancel}>Cancel</Btn></div>
+            <div style={{ display: "flex", gap: 10 }}>
+                <Btn
+                    size="lg"
+                    onClick={() => onSave(f)}
+                    disabled={
+                        !f.roomName.trim() ||
+                        f.maxOccupancy < 1 || f.maxOccupancy > 20 ||
+                        f.roomSize < 5 || f.roomSize > 2000 ||
+                        f.basePrice < 0 ||
+                        f.extraBedPrice < 0
+                    }
+                >
+                    {initial ? "Update Room" : "Create Room"}
+                </Btn>
+                <Btn variant="secondary" size="lg" onClick={onCancel}>Cancel</Btn>
+            </div>
         </div>
     );
 }

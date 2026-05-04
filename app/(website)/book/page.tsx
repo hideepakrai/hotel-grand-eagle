@@ -375,7 +375,7 @@ function BookingForm() {
                                     <label className="input-label" style={{ color: "var(--ivory-dim)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, display: "block" }}>Guests</label>
                                     <div style={{ position: "relative" }}>
                                         <select className="form-input" style={{ appearance: "none", cursor: "pointer" }} value={guests} onChange={e => setGuests(Number(e.target.value))}>
-                                            {[1, 2, 3, 4, 5].map(g => <option key={g} value={g}>{g} Guest{g > 1 ? 's' : ''}</option>)}
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(g => <option key={g} value={g}>{g} Guest{g > 1 ? 's' : ''}</option>)}
                                         </select>
                                         <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
                                             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="var(--gold)" strokeWidth="1.5" /></svg>
@@ -410,7 +410,7 @@ function BookingForm() {
                             </div>
                         ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-                                {availableRooms.filter(r => r.maxOccupancy >= guests).map(room => (
+                                {availableRooms.map(room => (
                                     <div key={room.id} className="book-room-card">
                                         <div className="book-room-img">
                                             <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000'} alt={room.roomName} />

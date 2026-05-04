@@ -12,6 +12,13 @@ export async function POST(req: Request) {
   const body = await req.json();
   const db = await getDatabase();
 
+  // Backend validation
+  if (body.seasonalPricing) {
+    for (const sp of body.seasonalPricing) {
+      if (sp.price < 0) return NextResponse.json({ error: "Seasonal price cannot be negative" }, { status: 400 });
+    }
+  }
+
   const result = await db.collection("pricing").insertOne(body);
 
   return NextResponse.json(result);
@@ -20,6 +27,13 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const body = await req.json();
   const db = await getDatabase();
+
+  // Backend validation
+  if (body.seasonalPricing) {
+    for (const sp of body.seasonalPricing) {
+      if (sp.price < 0) return NextResponse.json({ error: "Seasonal price cannot be negative" }, { status: 400 });
+    }
+  }
 
   await db.collection("pricing").updateOne(
     { roomId: body.roomId },

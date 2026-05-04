@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import { Btn, Badge, Inp, Field, Sel, Confirm, uid } from "./ui";
+import { Btn, Badge, Inp, NumInp, Field, Sel, Confirm, uid } from "./ui";
 import type { Room } from "./types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ function RoomModal({ room, rooms: roomTypes, onSave, onClose }: {
                             <Inp value={f.roomNumber ?? ""} onChange={set("roomNumber")} placeholder="e.g. 101" disabled={!isNew} />
                         </Field>
                         <Field label="Floor">
-                            <Inp type="number" value={String(f.floor ?? 1)} onChange={set("floor")} placeholder="1" min="1" max="99" />
+                            <NumInp value={f.floor ?? 1} min={1} max={99} onChange={e => setF(p => ({ ...p, floor: Number(e.target.value) }))} />
                         </Field>
                         <Field label="Room Type *">
                             <select value={f.roomTypeId ?? ""} onChange={handleRoomType}
@@ -174,7 +174,7 @@ function RoomModal({ room, rooms: roomTypes, onSave, onClose }: {
                     </Field>
                     <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20, paddingTop: 16, borderTop: "1px solid #f3f4f6" }}>
                         <Btn variant="secondary" onClick={onClose}>Cancel</Btn>
-                        <Btn onClick={save}>{isNew ? "Add Room" : "Save Changes"}</Btn>
+                        <Btn onClick={save} disabled={!f.roomNumber?.trim() || Number(f.floor) < 1 || Number(f.floor) > 99}>{isNew ? "Add Room" : "Save Changes"}</Btn>
                     </div>
                 </div>
             </div>

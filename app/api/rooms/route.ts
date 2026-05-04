@@ -88,6 +88,11 @@ export async function POST(req: Request) {
             lastCleaned: body.lastCleaned ?? new Date().toISOString().slice(0, 10),
             createdAt: new Date().toISOString(),
         };
+        // Backend validation
+        if (doc.floor < 1 || doc.floor > 99) {
+            return NextResponse.json({ error: "Floor must be between 1 and 99" }, { status: 400 });
+        }
+
         await db.collection("rooms").insertOne(doc);
         return NextResponse.json({ success: true, id: doc.id });
     } catch {
@@ -101,6 +106,11 @@ export async function PUT(req: Request) {
         const { id, ...data } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
         const db = await getDatabase();
+        // Backend validation
+        if (data.floor !== undefined && (data.floor < 1 || data.floor > 99)) {
+            return NextResponse.json({ error: "Floor must be between 1 and 99" }, { status: 400 });
+        }
+
         const result = await db.collection("rooms").updateOne({ id }, { $set: data });
         if (result.matchedCount === 0) return NextResponse.json({ error: "Room not found" }, { status: 404 });
         return NextResponse.json({ success: true });
