@@ -540,18 +540,42 @@ export const Inp = ({ value, onChange, type = "text", placeholder, className = "
     <input type={type} value={value} onChange={onChange} placeholder={placeholder} className={`inp inp-${size} ${className}`} style={style} disabled={disabled} autoFocus={autoFocus} onKeyDown={onKeyDown} min={min} max={max} />
 );
 
-type NumInpProps = { value: number; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; min?: number; max?: number; };
-export const NumInp = ({ value, onChange, min = 0, max = 999999 }: NumInpProps) => {
-    const change = (delta: number) => onChange({ target: { value: String(clamp(value + delta, min, max)) } } as React.ChangeEvent<HTMLInputElement>);
+type NumInpProps = { value: number; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; min?: number; max?: number; style?: React.CSSProperties; placeholder?: string; disabled?: boolean; errorMsg?: string; };
+export const NumInp = ({ value, onChange, min = 0, max = 999999, style, placeholder, disabled, errorMsg }: NumInpProps) => {
+    const isOver = value > max;
+    const isUnder = value < min;
+    const isInvalid = isOver || isUnder;
+
+    const change = (delta: number) => {
+        if (disabled) return;
+        const next = clamp(value + delta, min, max);
+        onChange({ target: { value: String(next) } } as React.ChangeEvent<HTMLInputElement>);
+    };
+
     return (
-        <div className="num-wrap">
-            <input type="number" value={value} onChange={onChange} min={min} max={max}
-                style={{ width: "100%", padding: "9px 32px 9px 12px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 13.5, fontFamily: "inherit", outline: "none", background: "#fff" }}
-                onFocus={e => (e.target.style.borderColor = "#E4C581")} onBlur={e => (e.target.style.borderColor = "#d1d5db")} />
-            <div className="num-arrows">
-                <button className="num-arrow" onClick={() => change(1)}>▲</button>
-                <button className="num-arrow" onClick={() => change(-1)}>▼</button>
+        <div className="num-wrap-container" style={{ ...style, position: "relative" }}>
+            <div className="num-wrap">
+                <input type="number" value={value} onChange={onChange} min={min} max={max} placeholder={placeholder} disabled={disabled}
+                    style={{
+                        width: "100%", padding: "9px 32px 9px 12px", borderRadius: 8, fontSize: 13.5, fontFamily: "inherit", outline: "none",
+                        background: disabled ? "#f3f4f6" : "#fff", cursor: disabled ? "not-allowed" : "text",
+                        border: `1px solid ${isInvalid ? "#dc2626" : "#d1d5db"}`,
+                        transition: "all 0.15s"
+                    }}
+                    onFocus={e => !disabled && !isInvalid && (e.target.style.borderColor = "#E4C581")}
+                    onBlur={e => !disabled && !isInvalid && (e.target.style.borderColor = "#d1d5db")} />
+                <div className="num-arrows">
+                    <button className="num-arrow" onClick={() => change(1)} disabled={disabled || value >= max}
+                        style={{ opacity: (disabled || value >= max) ? 0.4 : 1, cursor: (disabled || value >= max) ? "not-allowed" : "pointer" }}>▲</button>
+                    <button className="num-arrow" onClick={() => change(-1)} disabled={disabled || value <= min}
+                        style={{ opacity: (disabled || value <= min) ? 0.4 : 1, cursor: (disabled || value <= min) ? "not-allowed" : "pointer" }}>▼</button>
+                </div>
             </div>
+            {isInvalid && (
+                <div style={{ position: "absolute", top: "100%", left: 0, fontSize: 10, color: "#dc2626", fontWeight: 600, marginTop: 2, zIndex: 10 }}>
+                    {errorMsg ? errorMsg : (isOver ? `Max limit: ${max}` : `Min limit: ${min}`)}
+                </div>
+            )}
         </div>
     );
 };

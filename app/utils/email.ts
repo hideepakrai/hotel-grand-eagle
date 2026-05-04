@@ -24,9 +24,9 @@ export async function sendAdminBookingNotification(booking: any) {
     'EMAIL_SERVER_USER',
     'EMAIL_SERVER_PASSWORD'
   ];
-  
+
   const missing = requiredEnv.filter(k => !process.env[k]);
-  
+
   if (missing.length > 0) {
     console.warn(`[EmailService] Missing required configuration: ${missing.join(', ')}. Skipping notification.`);
     return;
@@ -43,7 +43,7 @@ export async function sendAdminBookingNotification(booking: any) {
     month: "long",
     day: "numeric",
   });
-  
+
   const checkOutDate = new Date(booking.checkOut).toLocaleDateString("en-IN", {
     weekday: "long",
     year: "numeric",

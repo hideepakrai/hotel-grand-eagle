@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useCallback } from "react";
 import { Booking, Customer, Room, RoomItem, MealPlan, CoGuest, Hotel } from "./types";
-import { Badge, Btn, Confirm, Field, Inp, Sel, Ic, statusColor, uid, fmtDate, BOOKING_SOURCES, DIETARY_PREFS } from "./ui";
+import { Badge, Btn, Confirm, Field, Inp, NumInp, Sel, Ic, statusColor, uid, fmtDate, BOOKING_SOURCES, DIETARY_PREFS, clamp } from "./ui";
 import { SimplePicker } from "./DateRangePicker";
 import InvoiceModal from "./Invoice";
 
@@ -244,7 +244,10 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
 
     const s = (field: keyof Booking) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
         setB(p => {
-            const updated = { ...p, [field]: e.target.value } as Booking;
+            let val: string | number = e.target.value;
+            if (e.target.type === "number") val = Number(val);
+
+            const updated = { ...p, [field]: val } as Booking;
             if (field === "roomTypeId") { const rt = roomTypes.find(r => r.id === e.target.value); updated.roomTypeName = rt?.roomName ?? ""; updated.roomNumber = null; }
             if (field === "mealPlanId") { const mp = mealPlans.find(m => m.id === e.target.value); updated.mealPlanCode = mp?.code ?? ""; }
             // Date guard: check-out must always be after check-in
@@ -423,8 +426,8 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                             {conflict && <div style={{ marginTop: 6, padding: "8px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12.5, color: "#dc2626" }}>⚠ Room {b.roomNumber} is already booked for overlapping dates. Please choose another room.</div>}
                         </Field>
                         <div className="grid-4 mb-12">
-                            <Field label="Adults"><Inp type="number" value={String(b.adults)} onChange={s("adults" as keyof Booking)} /></Field>
-                            <Field label="Children"><Inp type="number" value={String(b.children)} onChange={s("children" as keyof Booking)} /></Field>
+                            <Field label="Adults (1-10)"><NumInp value={b.adults} min={1} max={10} errorMsg="Maximum 10 adults allowed" onChange={s("adults" as keyof Booking) as any} /></Field>
+                            <Field label="Children (0-20)"><NumInp value={b.children} min={0} max={20} errorMsg="Maximum 20 children allowed" onChange={s("children" as keyof Booking) as any} /></Field>
                             <Field label="Meal Plan"><Sel value={b.mealPlanId} onChange={s("mealPlanId")} opts={activeMealPlans.map(mp => ({ v: mp.id, l: `${mp.code} – ${mp.name}` }))} /></Field>
                             <Field label="Status"><Sel value={b.status} onChange={s("status")} opts={ALL_STATUSES} /></Field>
                         </div>
@@ -460,13 +463,12 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
                                         <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>₹</span>
-                                        <input
-                                            type="number"
-                                            min="0"
+                                        <NumInp
+                                            min={0}
                                             placeholder={`Standard: ${roomTypes.find(r => r.id === b.roomTypeId)?.basePrice ?? 0} / night`}
-                                            value={b.overrideRoomPrice ?? ""}
+                                            value={Number(b.overrideRoomPrice ?? 0)}
                                             onChange={e => {
-                                                const val = e.target.value === "" ? undefined : Number(e.target.value);
+                                                const val = e.target.value === "" || e.target.value === "0" && b.overrideRoomPrice === undefined ? undefined : Number(e.target.value);
                                                 const rt2 = roomTypes.find(r => r.id === b.roomTypeId);
                                                 const mp2 = mealPlans.find(m => m.id === b.mealPlanId);
                                                 const pricePerNight = val !== undefined ? val : (rt2?.basePrice ?? 0);
@@ -474,7 +476,6 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                                                 const totalMealCost = (mp2?.pricePerPersonPerNight ?? 0) * (Number(b.adults) + Number(b.children)) * b.nights;
                                                 setB(p => ({ ...p, overrideRoomPrice: val, totalRoomCost, grandTotal: totalRoomCost + totalMealCost }));
                                             }}
-                                            className="inp"
                                             style={{ flex: 1 }}
                                         />
                                         {b.overrideRoomPrice !== undefined && (
@@ -535,7 +536,19 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                         }}>Delete Booking</Btn>
                     )}
                     <Btn variant="secondary" onClick={onClose}>{readOnly ? "Close" : "Cancel"}</Btn>
-                    {!readOnly && <Btn onClick={() => onSave(b)} disabled={!b.guestName.trim() || !!conflict}>Save Booking</Btn>}
+                    {!readOnly && (
+                        <Btn
+                            onClick={() => onSave(b)}
+                            disabled={
+                                !b.guestName.trim() ||
+                                !!conflict ||
+                                b.adults < 1 || b.adults > 10 ||
+                                b.children < 0 || b.children > 20
+                            }
+                        >
+                            Save Booking
+                        </Btn>
+                    )}
                 </div>
             </div>
         </div>
