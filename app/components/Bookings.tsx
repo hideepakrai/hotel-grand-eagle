@@ -99,13 +99,112 @@ function MonthPills({ selected, onSelect }: { selected: string; onSelect: (v: st
     );
 }
 
+function FilePicker({
+    file,
+    existingUrl,
+    onChange,
+    onClear,
+    placeholder = "Choose Aadhaar Image..."
+}: {
+    file: File | null;
+    existingUrl?: string;
+    onChange: (file: File | null) => void;
+    onClear?: () => void;
+    placeholder?: string;
+}) {
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const getDisplayName = () => {
+        if (file) return file.name;
+        if (existingUrl) {
+            const parts = existingUrl.split("/");
+            const lastPart = parts[parts.length - 1];
+            // Decode URI component to handle spaces/special chars in filename
+            try {
+                return decodeURIComponent(lastPart);
+            } catch {
+                return lastPart || "Existing Aadhaar";
+            }
+        }
+        return placeholder;
+    };
+
+    return (
+        <div
+            className="inp"
+            style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                padding: "5px 12px",
+                background: "#fff",
+                minHeight: 38
+            }}
+            onClick={() => fileInputRef.current?.click()}
+        >
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept="image/*"
+                onChange={e => {
+                    const selectedFile = e.target.files?.[0] || null;
+                    onChange(selectedFile);
+                    // Reset input so the same file can be re-selected if cleared
+                    e.target.value = "";
+                }}
+            />
+            <span style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                fontSize: 13,
+                color: (file || existingUrl) ? "#111827" : "#9ca3af"
+            }}>
+                {getDisplayName()}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8 }}>
+                {file && <span title="New file selected" style={{ fontSize: 14 }}>📎</span>}
+                {!file && existingUrl && <span title="Already uploaded" style={{ fontSize: 14 }}>✅</span>}
+                
+                {(file || existingUrl) && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onClear?.(); }}
+                        title="Remove file"
+                        style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", borderRadius: 4, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+                    >
+                        ✕
+                    </button>
+                )}
+
+                <div style={{ 
+                    padding: "4px 10px", 
+                    borderRadius: 6, 
+                    background: "#f3f4f6", 
+                    fontSize: 11, 
+                    fontWeight: 600, 
+                    color: "#4b5563",
+                    border: "1px solid #e5e7eb"
+                }}>
+                    Browse
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
 function CoGuestSection({
-    coGuests, adults, children, onChange
+    coGuests, adults, children, onChange, onFileSelect, files
 }: {
     coGuests: CoGuest[];
     adults: number;
     children: number;
     onChange: (g: CoGuest[]) => void;
+    onFileSelect: (guestId: string, file: File | null) => void;
+    files: Record<string, File>;
 }) {
     // Total additional guests = (adults - 1) for co-adults + all children
     const totalAdditional = Math.max(0, Number(adults) - 1) + Math.max(0, Number(children));
@@ -158,7 +257,18 @@ function CoGuestSection({
                         <div className="grid-3" style={{ gap: 8 }}>
                             <Field label="Full Name"><Inp value={g.name} onChange={e => upd(g.id, "name", e.target.value)} placeholder="Guest name" /></Field>
                             <Field label="Aadhar Number"><Inp value={g.aadharNo} onChange={e => upd(g.id, "aadharNo", e.target.value)} placeholder="Aadhar number" /></Field>
-                            <Field label="Upload Aadhar"><Inp type="file" value="" style={{ padding: "6px" }} onChange={e => upd(g.id, "aadharFileUrl", e.target.value)} /></Field>
+                            <Field label="Upload Aadhar">
+                                <FilePicker 
+                                    file={files[g.id] || null} 
+                                    existingUrl={g.aadharFileUrl} 
+                                    onChange={file => onFileSelect(g.id, file)} 
+                                    onClear={() => {
+                                        onFileSelect(g.id, null);
+                                        // Also clear the existing URL in the booking state
+                                        onChange(coGuests.map(x => x.id === g.id ? { ...x, aadharFileUrl: "" } : x));
+                                    }}
+                                />
+                            </Field>
                         </div>
                         <div className="grid-4" style={{ gap: 8, marginTop: 8 }}>
                             <Field label="Nationality"><Inp value={g.nationality} onChange={e => upd(g.id, "nationality", e.target.value)} placeholder="Country" /></Field>
@@ -238,6 +348,53 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
         return { ...defaults, ...init } as Booking;
     });
     const [tab, setTab] = useState<"main" | "guests" | "special">("main");
+    const [primaryFile, setPrimaryFile] = useState<File | null>(null);
+    const [coGuestFiles, setCoGuestFiles] = useState<Record<string, File>>({});
+    const [isUploading, setIsUploading] = useState(false);
+
+    const uploadFile = async (file: File): Promise<string | null> => {
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            const data = await res.json();
+            if (res.ok) return data.url;
+            alert(`Upload failed: ${data.error}`);
+            return null;
+        } catch {
+            alert("Upload failed. Check your connection.");
+            return null;
+        }
+    };
+
+    const handleSave = async () => {
+        setIsUploading(true);
+        let updatedB = { ...b };
+
+        // 1. Upload primary guest aadhar if selected
+        if (primaryFile) {
+            const url = await uploadFile(primaryFile);
+            if (url) updatedB.primaryAadharFileUrl = url;
+            else { setIsUploading(false); return; }
+        }
+
+        // 2. Upload co-guest aadhars if selected
+        if (Object.keys(coGuestFiles).length > 0) {
+            const newCoGuests = [...updatedB.coGuests];
+            for (let i = 0; i < newCoGuests.length; i++) {
+                const gid = newCoGuests[i].id;
+                if (coGuestFiles[gid]) {
+                    const url = await uploadFile(coGuestFiles[gid]);
+                    if (url) newCoGuests[i].aadharFileUrl = url;
+                    else { setIsUploading(false); return; }
+                }
+            }
+            updatedB.coGuests = newCoGuests;
+        }
+
+        onSave(updatedB);
+        setIsUploading(false);
+    };
 
     // Helper: add N days to a YYYY-MM-DD string
     const addDay = (d: string, n: number) => { const dt = new Date(d + "T00:00:00"); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); };
@@ -381,7 +538,17 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                         </div>
                         <div className="grid-2 mb-12">
                             <Field label="Aadhar Number"><Inp value={b.primaryAadharNo || ""} onChange={s("primaryAadharNo" as keyof Booking)} placeholder="Aadhar number" /></Field>
-                            <Field label="Upload Aadhar"><Inp type="file" value="" style={{ padding: "6px" }} onChange={s("primaryAadharFileUrl" as keyof Booking)} /></Field>
+                            <Field label="Upload Aadhar">
+                                <FilePicker 
+                                    file={primaryFile} 
+                                    existingUrl={b.primaryAadharFileUrl} 
+                                    onChange={setPrimaryFile} 
+                                    onClear={() => {
+                                        setPrimaryFile(null);
+                                        setB(p => ({ ...p, primaryAadharFileUrl: "" }));
+                                    }}
+                                />
+                            </Field>
                         </div>
                         <div className="grid-3 mb-12">
                             <Field label="Email"><Inp value={b.guestEmail} onChange={s("guestEmail")} type="email" /></Field>
@@ -447,7 +614,19 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                                 <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 14 }}>👤 Primary Guest: {b.guestName || "(Not set)"}</div>
                                 <div style={{ fontSize: 12.5, color: "#6b7280" }}>Aadhar: {b.primaryAadharNo || "—"} · {b.adults} Adult(s) + {b.children} Child(ren)</div>
                             </div>
-                            <CoGuestSection coGuests={b.coGuests ?? []} adults={b.adults} children={b.children} onChange={cg => setB(p => ({ ...p, coGuests: cg }))} />
+                            <CoGuestSection 
+                                coGuests={b.coGuests ?? []} 
+                                adults={b.adults} 
+                                children={b.children} 
+                                onChange={cg => setB(p => ({ ...p, coGuests: cg }))} 
+                                onFileSelect={(id, file) => setCoGuestFiles(p => {
+                                    const next = { ...p };
+                                    if (file) next[id] = file;
+                                    else delete next[id];
+                                    return next;
+                                })}
+                                files={coGuestFiles}
+                            />
                             <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
                                 💡 Guest slots are auto-generated based on Adults &amp; Children count. Aadhar details required for compliance.
                             </div>
@@ -538,15 +717,16 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                     <Btn variant="secondary" onClick={onClose}>{readOnly ? "Close" : "Cancel"}</Btn>
                     {!readOnly && (
                         <Btn
-                            onClick={() => onSave(b)}
+                            onClick={handleSave}
                             disabled={
+                                isUploading ||
                                 !b.guestName.trim() ||
                                 !!conflict ||
                                 b.adults < 1 || b.adults > 10 ||
                                 b.children < 0 || b.children > 20
                             }
                         >
-                            Save Booking
+                            {isUploading ? "Uploading..." : "Save Booking"}
                         </Btn>
                     )}
                 </div>

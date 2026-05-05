@@ -10,6 +10,7 @@ export interface RoomItem {
     notes: string;
     lastCleaned: string;
     createdAt: string;
+    isTest?: boolean;
 }
 
 export interface Room {
@@ -36,6 +37,7 @@ export interface Room {
     amenityIds: string[];
     images: string[];
     roomNumbers?: string[];
+    isTest?: boolean;
 }
 
 export interface Availability {
@@ -125,6 +127,7 @@ export interface Customer {
     address: string;
     company: string;
     notes: string;
+    isTest?: boolean;
 }
 
 export interface Booking {
@@ -162,6 +165,7 @@ export interface Booking {
     primaryAadharFileUrl?: string;
     overrideRoomPrice?: number;
     createdAt: string;
+    isTest?: boolean;
 }
 
 export interface MealPlan {
@@ -330,6 +334,7 @@ export interface CMSPage {
     isPublished: boolean;
     createdAt: string;
     updatedAt: string;
+    isTest?: boolean;
 }
 
 // ── Home Page CMS types ───────────────────────────────────────────────────────

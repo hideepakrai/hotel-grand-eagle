@@ -86,6 +86,8 @@ interface AdminContextType {
     updateTestimonial: (t: Testimonial) => Promise<void>;
     deleteTestimonial: (id: string) => Promise<void>;
     handleCheckIn: (bookingId: string, roomNumber: string, mealPlanId: string) => void;
+    testMode: boolean;
+    toggleTestMode: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -112,10 +114,33 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [cmsPages, setCmsPages] = useState<CMSPage[]>([]);
     const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+    const [testMode, setTestMode] = useState<boolean>(false);
+
+    // Initialise testMode from localStorage on mount
+    useEffect(() => {
+        const stored = localStorage.getItem("admin_test_mode");
+        if (stored === "true") setTestMode(true);
+    }, []);
+
+    // Persist testMode
+    useEffect(() => {
+        localStorage.setItem("admin_test_mode", String(testMode));
+    }, [testMode]);
+
+    const toggleTestMode = () => setTestMode(p => !p);
+
+    const adminFetch = (url: string, init?: RequestInit) => {
+        const headers = {
+            ...(init?.headers || {}),
+            "x-test-mode": String(testMode)
+        };
+        return fetch(url, { ...init, headers });
+    };
+
 
     // ── CMS Handlers ──
     const addPage = async (p: CMSPage) => {
-        const res = await fetch("/api/pages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
+        const res = await adminFetch("/api/pages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
         if (res.ok) {
             const data = await res.json();
             setCmsPages(curr => [...curr, data]);
@@ -125,7 +150,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
     };
     const updatePage = async (p: CMSPage) => {
-        const res = await fetch(`/api/pages/${p.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
+        const res = await adminFetch(`/api/pages/${p.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
         if (res.ok) {
             setCmsPages(curr => curr.map(x => x.id === p.id ? p : x));
         } else {
@@ -134,7 +159,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
     };
     const deletePage = async (id: string) => {
-        const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
+        const res = await adminFetch(`/api/pages/${id}`, { method: "DELETE" });
         if (res.ok) {
             setCmsPages(curr => curr.filter(x => x.id !== id));
         } else {
@@ -145,35 +170,35 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     // ── Gallery Handlers ──
     const addGalleryImage = async (img: GalleryImage) => {
-        const res = await fetch("/api/gallery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(img) });
+        const res = await adminFetch("/api/gallery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(img) });
         if (res.ok) { const data = await res.json(); setGalleryImages(curr => [...curr, data]); }
     };
     const updateGalleryImage = async (img: GalleryImage) => {
-        await fetch("/api/gallery", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(img) });
+        await adminFetch("/api/gallery", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(img) });
         setGalleryImages(curr => curr.map(x => x.id === img.id ? img : x));
     };
     const deleteGalleryImage = async (id: string) => {
-        await fetch(`/api/gallery?id=${id}`, { method: "DELETE" });
+        await adminFetch(`/api/gallery?id=${id}`, { method: "DELETE" });
         setGalleryImages(curr => curr.filter(x => x.id !== id));
     };
     const reorderGallery = async (imgs: GalleryImage[]) => {
         setGalleryImages(imgs);
         for (const img of imgs) {
-            await fetch("/api/gallery", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: img.id, order: img.order }) });
+            await adminFetch("/api/gallery", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: img.id, order: img.order }) });
         }
     };
 
     // ── Booking Handlers ──
     const addBooking = async (b: Booking): Promise<boolean> => {
         try {
-            const res = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+            const res = await adminFetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
             if (res.status === 409) {
                 const data = await res.json();
                 alert(`⚠️ Booking Conflict\n\n${data.error || "Room is already booked for overlapping dates."}`);
                 return false;
             }
             setBookings(p => [...p, { ...b, currency: "INR" }]);
-            fetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { });
+            adminFetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { });
             return true;
         } catch {
             alert("Failed to create booking. Please try again.");
@@ -182,113 +207,113 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
     const updateBooking = async (b: Booking): Promise<boolean> => {
         try {
-            const res = await fetch("/api/bookings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+            const res = await adminFetch("/api/bookings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
             if (res.status === 409) {
                 const data = await res.json();
                 alert(`⚠️ Booking Conflict\n\n${data.error || "Room is already booked for overlapping dates."}`);
                 return false;
             }
             setBookings(p => p.map(x => x.id === b.id ? { ...b, currency: "INR" } : x));
-            fetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { });
+            adminFetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { });
             return true;
         } catch {
             alert("Failed to update booking. Please try again.");
             return false;
         }
     };
-    const deleteBooking = async (id: string) => { await fetch(`/api/bookings?id=${id}`, { method: "DELETE" }); setBookings(p => p.filter(x => x.id !== id)); };
+    const deleteBooking = async (id: string) => { await adminFetch(`/api/bookings?id=${id}`, { method: "DELETE" }); setBookings(p => p.filter(x => x.id !== id)); };
 
     // ── Customer Handlers ──
-    const addCustomer = async (c: Customer) => { await fetch("/api/customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(c) }); setCustomers(p => [...p, c]); };
-    const updateCustomer = async (c: Customer) => { await fetch("/api/customers", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(c) }); setCustomers(p => p.map(x => x.id === c.id ? c : x)); };
-    const deleteCustomer = async (id: string) => { await fetch(`/api/customers?id=${id}`, { method: "DELETE" }); setCustomers(p => p.filter(x => x.id !== id)); };
+    const addCustomer = async (c: Customer) => { await adminFetch("/api/customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(c) }); setCustomers(p => [...p, c]); };
+    const updateCustomer = async (c: Customer) => { await adminFetch("/api/customers", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(c) }); setCustomers(p => p.map(x => x.id === c.id ? c : x)); };
+    const deleteCustomer = async (id: string) => { await adminFetch(`/api/customers?id=${id}`, { method: "DELETE" }); setCustomers(p => p.filter(x => x.id !== id)); };
 
     // ── Room Type Handlers ──
     const addRoomType = async (r: Room) => {
-        await fetch("/api/room-types", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+        await adminFetch("/api/room-types", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
         setRoomTypes(p => [...p, r]);
     };
     const editRoomType = async (r: Room) => {
-        await fetch("/api/room-types", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+        await adminFetch("/api/room-types", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
         setRoomTypes(p => p.map(x => x.id === r.id ? r : x));
     };
     const deleteRoomType = async (id: string) => {
-        await fetch(`/api/room-types?id=${id}`, { method: "DELETE" });
+        await adminFetch(`/api/room-types?id=${id}`, { method: "DELETE" });
         setRoomTypes(p => p.filter(x => x.id !== id));
     };
 
     // ── Rooms Handlers ──
     const addRoom = async (r: RoomItem) => {
-        await fetch("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+        await adminFetch("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
         setRooms(p => [...p, r]);
-        const res = await fetch("/api/housekeeping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+        const res = await adminFetch("/api/housekeeping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
         const hk = await res.json();
         if (hk.task) setHkTasks(p => [...p, hk.task]);
     };
     const updateRoom = async (r: RoomItem) => {
-        await fetch("/api/rooms", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+        await adminFetch("/api/rooms", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
         setRooms(p => p.map(x => x.id === r.id ? r : x));
     };
     const deleteRoom = async (id: string) => {
         const room = rooms.find(x => x.id === id);
-        await fetch(`/api/rooms?id=${id}`, { method: "DELETE" });
+        await adminFetch(`/api/rooms?id=${id}`, { method: "DELETE" });
         setRooms(p => p.filter(x => x.id !== id));
         if (room) {
-            await fetch(`/api/housekeeping?roomNumber=${room.roomNumber}`, { method: "DELETE" });
+            await adminFetch(`/api/housekeeping?roomNumber=${room.roomNumber}`, { method: "DELETE" });
             setHkTasks(p => p.filter(x => x.roomNumber !== room.roomNumber));
         }
     };
     const deleteFloor = async (floor: number) => {
-        await fetch(`/api/rooms?floor=${floor}`, { method: "DELETE" });
+        await adminFetch(`/api/rooms?floor=${floor}`, { method: "DELETE" });
         setRooms(p => p.filter(x => x.floor !== floor));
-        await fetch(`/api/housekeeping?floor=${floor}`, { method: "DELETE" });
+        await adminFetch(`/api/housekeeping?floor=${floor}`, { method: "DELETE" });
         setHkTasks(p => p.filter(x => x.floor !== floor));
     };
 
     // ── Housekeeping ──
-    const updateHkTask = async (t: HousekeepingTask) => { await fetch("/api/housekeeping", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) }); setHkTasks(p => p.map(x => x.id === t.id ? t : x)); };
+    const updateHkTask = async (t: HousekeepingTask) => { await adminFetch("/api/housekeeping", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) }); setHkTasks(p => p.map(x => x.id === t.id ? t : x)); };
 
     // ── Maintenance ──
-    const addMaintenance = async (item: MaintenanceItem) => { await fetch("/api/maintenance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item) }); setMaintenance(p => [...p, item]); };
-    const updateMaintenance = async (item: MaintenanceItem) => { await fetch("/api/maintenance", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item) }); setMaintenance(p => p.map(x => x.id === item.id ? item : x)); };
+    const addMaintenance = async (item: MaintenanceItem) => { await adminFetch("/api/maintenance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item) }); setMaintenance(p => [...p, item]); };
+    const updateMaintenance = async (item: MaintenanceItem) => { await adminFetch("/api/maintenance", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item) }); setMaintenance(p => p.map(x => x.id === item.id ? item : x)); };
 
     // ── Staff ──
-    const addStaff = async (s: StaffMember) => { await fetch("/api/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) }); setStaff(p => [...p, s]); };
-    const updateStaff = async (s: StaffMember) => { await fetch("/api/staff", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) }); setStaff(p => p.map(x => x.id === s.id ? s : x)); };
-    const deleteStaff = async (id: string) => { await fetch(`/api/staff?id=${id}`, { method: "DELETE" }); setStaff(p => p.filter(x => x.id !== id)); };
+    const addStaff = async (s: StaffMember) => { await adminFetch("/api/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) }); setStaff(p => [...p, s]); };
+    const updateStaff = async (s: StaffMember) => { await adminFetch("/api/staff", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) }); setStaff(p => p.map(x => x.id === s.id ? s : x)); };
+    const deleteStaff = async (id: string) => { await adminFetch(`/api/staff?id=${id}`, { method: "DELETE" }); setStaff(p => p.filter(x => x.id !== id)); };
 
     // ── Meal Plans ──
-    const addMealPlan = async (mp: MealPlan) => { await fetch("/api/meal-plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mp) }); setMealPlans(p => [...p, mp]); };
-    const updateMealPlan = async (mp: MealPlan) => { await fetch("/api/meal-plans", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mp) }); setMealPlans(p => p.map(x => x.id === mp.id ? mp : x)); };
-    const deleteMealPlan = async (id: string) => { await fetch(`/api/meal-plans?id=${id}`, { method: "DELETE" }); setMealPlans(p => p.filter(x => x.id !== id)); };
+    const addMealPlan = async (mp: MealPlan) => { await adminFetch("/api/meal-plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mp) }); setMealPlans(p => [...p, mp]); };
+    const updateMealPlan = async (mp: MealPlan) => { await adminFetch("/api/meal-plans", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mp) }); setMealPlans(p => p.map(x => x.id === mp.id ? mp : x)); };
+    const deleteMealPlan = async (id: string) => { await adminFetch(`/api/meal-plans?id=${id}`, { method: "DELETE" }); setMealPlans(p => p.filter(x => x.id !== id)); };
 
     // ── Nearby Places ──
     const addNearbyPlace = async (place: NearbyPlace) => {
-        const res = await fetch("/api/nearby", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(place) });
+        const res = await adminFetch("/api/nearby", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(place) });
         const data = await res.json();
         if (data.place) setNearbyPlaces(p => [...p, data.place]);
     };
     const updateNearbyPlace = async (place: NearbyPlace) => {
-        await fetch("/api/nearby", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(place) });
+        await adminFetch("/api/nearby", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(place) });
         setNearbyPlaces(p => p.map(x => x.id === place.id ? place : x));
     };
     const deleteNearbyPlace = async (id: string) => {
-        await fetch(`/api/nearby?id=${id}`, { method: "DELETE" });
+        await adminFetch(`/api/nearby?id=${id}`, { method: "DELETE" });
         setNearbyPlaces(p => p.filter(x => x.id !== id));
     };
 
     // ── Testimonials ──
     const addTestimonial = async (t: Testimonial) => {
-        const res = await fetch("/api/testimonials", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
+        const res = await adminFetch("/api/testimonials", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
         const data = await res.json();
         if (data.testimonial) setTestimonials(p => [data.testimonial, ...p]);
     };
     const updateTestimonial = async (t: Testimonial) => {
-        await fetch("/api/testimonials", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
+        await adminFetch("/api/testimonials", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
         setTestimonials(p => p.map(x => x.id === t.id ? t : x));
     };
     const deleteTestimonial = async (id: string) => {
-        await fetch(`/api/testimonials?id=${id}`, { method: "DELETE" });
+        await adminFetch(`/api/testimonials?id=${id}`, { method: "DELETE" });
         setTestimonials(p => p.filter(x => x.id !== id));
     };
 
@@ -298,48 +323,48 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         updateBooking({ ...bookings.find(b => b.id === bookingId)!, roomNumber, mealPlanId, mealPlanCode: mp?.code ?? "", status: "checked-in", checkInActual: new Date().toISOString() });
     };
 
-    useEffect(() => { fetch("/api/hotel-settings").then(r => r.json()).then(d => { if (d.name) setHotel(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/room-types").then(r => r.json()).then(d => { if (d.length) setRoomTypes(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/amenities").then(r => r.json()).then(d => { if (d.length) setAmenityCats(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/bookings").then(r => r.json()).then(d => setBookings(d)).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/customers").then(r => r.json()).then(d => setCustomers(d)).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/meal-plans").then(r => r.json()).then(d => { if (d.length) setMealPlans(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/housekeeping").then(r => r.json()).then(d => setHkTasks(d)).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/maintenance").then(r => r.json()).then(d => setMaintenance(d)).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/pricing-rules").then(r => r.json()).then(d => { if (d.length) setPricingRules(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/staff").then(r => r.json()).then(d => { if (d.length) setStaff(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/nearby").then(r => r.json()).then(d => { if (Array.isArray(d)) setNearbyPlaces(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/pages").then(r => r.json()).then(d => { if (Array.isArray(d)) setCmsPages(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/gallery").then(r => r.json()).then(d => { if (Array.isArray(d)) setGalleryImages(d); }).catch(() => { }); }, []);
-    useEffect(() => { fetch("/api/testimonials").then(r => r.json()).then(d => { if (Array.isArray(d)) setTestimonials(d); }).catch(() => { }); }, []);
+    useEffect(() => { adminFetch("/api/hotel-settings").then(r => r.json()).then(d => { if (d.name) setHotel(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/room-types").then(r => r.json()).then(d => { if (d.length) setRoomTypes(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/amenities").then(r => r.json()).then(d => { if (d.length) setAmenityCats(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/bookings").then(r => r.json()).then(d => setBookings(d)).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/customers").then(r => r.json()).then(d => setCustomers(d)).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/meal-plans").then(r => r.json()).then(d => { if (d.length) setMealPlans(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/housekeeping").then(r => r.json()).then(d => setHkTasks(d)).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/maintenance").then(r => r.json()).then(d => setMaintenance(d)).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/pricing-rules").then(r => r.json()).then(d => { if (d.length) setPricingRules(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/staff").then(r => r.json()).then(d => { if (d.length) setStaff(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/rooms").then(r => r.json()).then(d => { if (d.length) setRooms(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/nearby").then(r => r.json()).then(d => { if (Array.isArray(d)) setNearbyPlaces(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/pages").then(r => r.json()).then(d => { if (Array.isArray(d)) setCmsPages(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/gallery").then(r => r.json()).then(d => { if (Array.isArray(d)) setGalleryImages(d); }).catch(() => { }); }, [testMode]);
+    useEffect(() => { adminFetch("/api/testimonials").then(r => r.json()).then(d => { if (Array.isArray(d)) setTestimonials(d); }).catch(() => { }); }, [testMode]);
 
     const runSeed = async () => {
         const res = await fetch("/api/seed");
         const data = await res.json();
         if (data.success) {
             const [b, c, mp, hk, mn, pr, st, rm, am, ri] = await Promise.all([
-                fetch("/api/bookings").then(r => r.json()),
-                fetch("/api/customers").then(r => r.json()),
-                fetch("/api/meal-plans").then(r => r.json()),
-                fetch("/api/housekeeping").then(r => r.json()),
-                fetch("/api/maintenance").then(r => r.json()),
-                fetch("/api/pricing-rules").then(r => r.json()),
-                fetch("/api/staff").then(r => r.json()),
-                fetch("/api/room-types").then(r => r.json()),
-                fetch("/api/amenities").then(r => r.json()),
-                fetch("/api/rooms").then(r => r.json()),
+                adminFetch("/api/bookings").then(r => r.json()),
+                adminFetch("/api/customers").then(r => r.json()),
+                adminFetch("/api/meal-plans").then(r => r.json()),
+                adminFetch("/api/housekeeping").then(r => r.json()),
+                adminFetch("/api/maintenance").then(r => r.json()),
+                adminFetch("/api/pricing-rules").then(r => r.json()),
+                adminFetch("/api/staff").then(r => r.json()),
+                adminFetch("/api/room-types").then(r => r.json()),
+                adminFetch("/api/amenities").then(r => r.json()),
+                adminFetch("/api/rooms").then(r => r.json()),
             ]);
             setBookings(b); setCustomers(c); if (mp.length) setMealPlans(mp);
             setHkTasks(hk); setMaintenance(mn); if (pr.length) setPricingRules(pr);
             if (st.length) setStaff(st); if (rm.length) setRoomTypes(rm);
             if (am.length) setAmenityCats(am);
-            fetch("/api/hotel-settings").then(r => r.json()).then(d => { if (d.name) setHotel(d); });
+            adminFetch("/api/hotel-settings").then(r => r.json()).then(d => { if (d.name) setHotel(d); });
         }
     };
 
     const updateHotel = async (h: Hotel) => {
-        await fetch("/api/hotel-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(h) });
+        await adminFetch("/api/hotel-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(h) });
         setHotel(h);
     };
 
@@ -351,6 +376,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         pricing, setPricing, availability, setAvailability, currency, setCurrency,
         nearbyPlaces, setNearbyPlaces, cmsPages, setCmsPages, galleryImages, setGalleryImages,
         testimonials, setTestimonials, runSeed, updateHotel,
+        testMode, toggleTestMode,
+
         
         // CRUD Handlers
         addPage, updatePage, deletePage,

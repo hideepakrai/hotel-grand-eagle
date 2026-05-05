@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDatabase } from "@/app/utils/getDatabase";
 import { sendAdminBookingNotification } from "@/app/utils/email";
 import { Booking } from "@/app/components/types";
+import { getTestMode, withTestMode, attachTestMode } from "@/app/utils/testMode";
 
 /** Returns true if the given room has any overlapping active booking, excluding `excludeId` */
 async function hasRoomConflict(
@@ -10,23 +11,26 @@ async function hasRoomConflict(
     roomTypeId: string,
     checkIn: string,
     checkOut: string,
+    isTest: boolean,
     excludeId?: string
 ): Promise<boolean> {
-    const query: Record<string, unknown> = {
+    const query: Record<string, unknown> = withTestMode({
         roomNumber,
         roomTypeId,
         status: { $nin: ["cancelled", "checked-out", "no-show"] },
         checkIn: { $lt: checkOut },
         checkOut: { $gt: checkIn },
-    };
+    }, isTest);
     if (excludeId) query.id = { $ne: excludeId };
     const conflict = await db.collection("bookings").findOne(query);
     return !!conflict;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+    const isTest = getTestMode(req);
     const db = await getDatabase();
-    const raw = await db.collection("bookings").find().toArray();
+    const query = withTestMode({}, isTest);
+    const raw = await db.collection("bookings").find(query).toArray();
     // Normalise every document on the way out so legacy/website bookings
     // don't crash the admin panel even if stored before this fix.
     const bookings = raw.map(({ _id, ...doc }) => normalizeBooking(doc as Record<string, unknown>));
@@ -119,6 +123,7 @@ function normalizeBooking(body: Record<string, unknown>): Booking {
 export async function POST(req: Request) {
     try {
         const raw = await req.json() as Record<string, unknown>;
+        const isTest = getTestMode(req);
         const body = normalizeBooking(raw);
         const db = await getDatabase();
 
@@ -129,7 +134,8 @@ export async function POST(req: Request) {
                 body.roomNumber as string,
                 body.roomTypeId as string,
                 body.checkIn as string,
-                body.checkOut as string
+                body.checkOut as string,
+                isTest
             );
             if (conflict) {
                 return NextResponse.json(
@@ -147,7 +153,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Children count must be between 0 and 20." }, { status: 400 });
         }
 
-        const result = await db.collection("bookings").insertOne(body);
+        const booking = attachTestMode(body, isTest);
+        const result = await db.collection("bookings").insertOne(booking);
 
         // Notify Admin (Await for reliability)
         await sendAdminBookingNotification(body);
@@ -170,6 +177,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
     try {
+        const isTest = getTestMode(req);
         const body = await req.json() as Partial<Booking>;
         const { id, ...data } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -185,6 +193,7 @@ export async function PUT(req: Request) {
                 data.roomTypeId,
                 data.checkIn,
                 data.checkOut,
+                isTest,
                 id
             );
             if (conflict) {
@@ -204,7 +213,7 @@ export async function PUT(req: Request) {
         }
 
         // Always store INR
-        const updateData = { ...data, currency: "INR" };
+        const updateData = attachTestMode({ ...data, currency: "INR" }, isTest);
         await db.collection("bookings").updateOne({ id }, { $set: updateData });
 
         // Sync room status based on booking status
