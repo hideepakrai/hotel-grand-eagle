@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDatabase } from "@/app/utils/getDatabase";
+import { getTestMode, withTestMode, attachTestMode } from "@/app/utils/testMode";
 
 // GET all room types
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const isTest = getTestMode(req);
     const db = await getDatabase();
-    const rooms = await db.collection("room_types").find({}).toArray();
+    const query = withTestMode({}, isTest);
+    const rooms = await db.collection("room_types").find(query).toArray();
     // Strip MongoDB internal _id from results
     const clean = rooms.map(({ _id, ...rest }) => rest);
     return NextResponse.json(clean);
@@ -18,8 +21,10 @@ export async function GET() {
 // POST — create a new room type
 export async function POST(req: Request) {
   try {
+    const isTest = getTestMode(req);
     const body = await req.json();
     const db = await getDatabase();
+    
     // Backend validation
     if (body.maxOccupancy !== undefined && (body.maxOccupancy < 1 || body.maxOccupancy > 20)) {
       return NextResponse.json({ error: "Max occupancy must be between 1 and 20" }, { status: 400 });
@@ -34,7 +39,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Extra bed price cannot be negative" }, { status: 400 });
     }
 
-    await db.collection("room_types").insertOne(body);
+    const doc = attachTestMode(body, isTest);
+    await db.collection("room_types").insertOne(doc);
     return NextResponse.json({ success: true, id: body.id });
   } catch (err) {
     return NextResponse.json({ error: "Failed to create room" }, { status: 500 });
@@ -44,10 +50,12 @@ export async function POST(req: Request) {
 // PUT — update existing room type by its string id field
 export async function PUT(req: Request) {
   try {
+    const isTest = getTestMode(req);
     const body = await req.json();
     const { id, ...data } = body;
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
     const db = await getDatabase();
+    
     // Backend validation
     if (data.maxOccupancy !== undefined && (data.maxOccupancy < 1 || data.maxOccupancy > 20)) {
       return NextResponse.json({ error: "Max occupancy must be between 1 and 20" }, { status: 400 });
@@ -62,12 +70,13 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Extra bed price cannot be negative" }, { status: 400 });
     }
 
+    const updateData = attachTestMode(data, isTest);
     const result = await db.collection("room_types").updateOne(
-      { id },
-      { $set: data }
+      withTestMode({ id }, isTest),
+      { $set: updateData }
     );
     if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return NextResponse.json({ error: "Room not found in current mode" }, { status: 404 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
@@ -78,16 +87,17 @@ export async function PUT(req: Request) {
 // DELETE — remove room by string id query param
 export async function DELETE(req: Request) {
   try {
+    const isTest = getTestMode(req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
     const db = await getDatabase();
-    const result = await db.collection("room_types").deleteOne({ id });
+    const result = await db.collection("room_types").deleteOne(withTestMode({ id }, isTest));
     if (result.deletedCount === 0) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return NextResponse.json({ error: "Room not found in current mode" }, { status: 404 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: "Failed to delete room" }, { status: 500 });
   }
-}
+}

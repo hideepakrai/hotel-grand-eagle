@@ -1,33 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDatabase } from "@/app/utils/getDatabase";
+import { getTestMode, withTestMode, attachTestMode } from "@/app/utils/testMode";
 
 /**
  * Individual Room Inventory API — collection: "rooms"
- * 
- * Manages physical rooms (room numbers like 101, 102, 201 etc.)
- * Each document:
- * {
- *   id: string,
- *   roomNumber: string,     // "101", "202"
- *   roomTypeId: string,     // ref to room_types collection
- *   roomTypeName: string,   // denormalized for display
- *   floor: number,
- *   status: "available" | "occupied" | "cleaning" | "maintenance" | "out-of-order" | "blocked",
- *   isActive: boolean,
- *   features: string[],     // "Corner Room", "Connecting Door", "Accessible"
- *   notes: string,
- *   lastCleaned: string,    // ISO date
- *   createdAt: string,
- * }
- *
- * Query params for GET:
- *   ?roomTypeId=   — filter by room type
- *   ?checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD&roomTypeId=  — additionally exclude rooms with
- *       overlapping active bookings (returns only bookable rooms for the date range)
  */
 
 export async function GET(req: Request) {
     try {
+        const isTest = getTestMode(req);
         const { searchParams } = new URL(req.url);
         const roomTypeId = searchParams.get("roomTypeId");
         const checkIn = searchParams.get("checkIn");
@@ -35,20 +16,24 @@ export async function GET(req: Request) {
 
         const db = await getDatabase();
 
-        // Base filter by roomTypeId if provided
-        const filter: Record<string, unknown> = roomTypeId ? { roomTypeId } : {};
+        // Base filter by roomTypeId if provided + test mode
+        const filter: Record<string, unknown> = withTestMode(
+            roomTypeId ? { roomTypeId } : {},
+            isTest
+        );
+        
         const rooms = await db.collection("rooms").find(filter).sort({ floor: 1, roomNumber: 1 }).toArray();
         let clean = rooms.map(({ _id, ...rest }) => rest);
 
         // Date-range availability filtering: exclude rooms with overlapping active bookings
         if (checkIn && checkOut && roomTypeId) {
-            const overlapping = await db.collection("bookings").find({
+            const overlapping = await db.collection("bookings").find(withTestMode({
                 roomTypeId,
                 roomNumber: { $ne: null, $exists: true },
                 status: { $nin: ["cancelled", "checked-out", "no-show"] },
                 checkIn: { $lt: checkOut },
                 checkOut: { $gt: checkIn },
-            }).toArray();
+            }, isTest)).toArray();
 
             const occupiedRooms = new Set(overlapping.map((b) => String(b.roomNumber)));
 
@@ -67,15 +52,18 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        const isTest = getTestMode(req);
         const body = await req.json();
         if (!body.roomNumber || !body.roomTypeId) {
             return NextResponse.json({ error: "roomNumber and roomTypeId are required" }, { status: 400 });
         }
         const db = await getDatabase();
-        const exists = await db.collection("rooms").findOne({ roomNumber: body.roomNumber });
-        if (exists) return NextResponse.json({ error: `Room ${body.roomNumber} already exists` }, { status: 409 });
+        
+        // Check if exists in the same mode
+        const exists = await db.collection("rooms").findOne(withTestMode({ roomNumber: body.roomNumber }, isTest));
+        if (exists) return NextResponse.json({ error: `Room ${body.roomNumber} already exists in ${isTest ? 'test' : 'production'} mode` }, { status: 409 });
 
-        const doc = {
+        const doc = attachTestMode({
             id: body.id || `room_${body.roomNumber}`,
             roomNumber: body.roomNumber,
             roomTypeId: body.roomTypeId,
@@ -87,8 +75,8 @@ export async function POST(req: Request) {
             notes: body.notes ?? "",
             lastCleaned: body.lastCleaned ?? new Date().toISOString().slice(0, 10),
             createdAt: new Date().toISOString(),
-        };
-        // Backend validation
+        }, isTest);
+
         if (doc.floor < 1 || doc.floor > 99) {
             return NextResponse.json({ error: "Floor must be between 1 and 99" }, { status: 400 });
         }
@@ -102,16 +90,18 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
     try {
+        const isTest = getTestMode(req);
         const body = await req.json();
         const { id, ...data } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
         const db = await getDatabase();
-        // Backend validation
+        
         if (data.floor !== undefined && (data.floor < 1 || data.floor > 99)) {
             return NextResponse.json({ error: "Floor must be between 1 and 99" }, { status: 400 });
         }
 
-        const result = await db.collection("rooms").updateOne({ id }, { $set: data });
+        const updateData = attachTestMode(data, isTest);
+        const result = await db.collection("rooms").updateOne({ id }, { $set: updateData });
         if (result.matchedCount === 0) return NextResponse.json({ error: "Room not found" }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch {
@@ -121,6 +111,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
+        const isTest = getTestMode(req);
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
         const floor = searchParams.get("floor");
@@ -128,14 +119,15 @@ export async function DELETE(req: Request) {
         const db = await getDatabase();
 
         if (id) {
-            const result = await db.collection("rooms").deleteOne({ id });
-            if (result.deletedCount === 0) return NextResponse.json({ error: "Room not found" }, { status: 404 });
+            // Delete should also check mode to be safe, though ID is usually unique
+            const result = await db.collection("rooms").deleteOne(withTestMode({ id }, isTest));
+            if (result.deletedCount === 0) return NextResponse.json({ error: "Room not found in current mode" }, { status: 404 });
             return NextResponse.json({ success: true });
         }
 
         if (floor) {
             const floorNum = parseInt(floor);
-            const result = await db.collection("rooms").deleteMany({ floor: floorNum });
+            const result = await db.collection("rooms").deleteMany(withTestMode({ floor: floorNum }, isTest));
             return NextResponse.json({ success: true, deletedCount: result.deletedCount });
         }
 

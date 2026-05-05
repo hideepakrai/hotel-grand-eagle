@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ic } from "./ui";
+import { Ic, Toggle, Badge } from "./ui";
 import { useAdmin } from "./AdminContext";
 
 export const NAV_GROUPS = [
@@ -38,7 +38,7 @@ export const NAV_GROUPS = [
 ];
 
 export function Sidebar() {
-    const { collapsed, setCollapsed, mobileNavOpen, setMobileNavOpen } = useAdmin();
+    const { collapsed, setCollapsed, mobileNavOpen, setMobileNavOpen, testMode, toggleTestMode } = useAdmin();
     const pathname = usePathname();
     
     return (
@@ -62,6 +62,11 @@ export function Sidebar() {
                         </div>
                     ))}
                 </nav>
+                <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.07)", marginBottom: 4 }}>
+                    <div className="nav-group-label" style={{ marginBottom: 8, padding: 0 }}>System</div>
+                    <Toggle checked={testMode} onChange={toggleTestMode} label={collapsed ? "" : "Test Mode"} />
+                    {!collapsed && <div style={{ fontSize: 10, color: testMode ? "#fbbf24" : "#6b7280", marginTop: 4, fontWeight: 500 }}>{testMode ? "Writing to Test Database" : "Using Production Database"}</div>}
+                </div>
                 <div className="sidebar-footer">
                     <button onClick={() => setCollapsed(!collapsed)} className="nav-item">
                         <span className="nav-item-icon"><Ic.Chev r={collapsed} /></span>
@@ -123,7 +128,7 @@ export function SearchOverlay() {
 }
 
 export function Topbar() {
-    const { hotel, setMobileNavOpen, setSearchOpen, bookings, runSeed } = useAdmin();
+    const { hotel, setMobileNavOpen, setSearchOpen, bookings, runSeed, testMode } = useAdmin();
     const pathname = usePathname();
     const pageLabel = NAV_GROUPS.flatMap(g => g.items).find(n => n.path === pathname)?.label ?? "Hotel Admin";
 
@@ -148,7 +153,11 @@ export function Topbar() {
                     <span className="star-rating">{"★".repeat(hotel.starRating)}</span>
                     <span className="location-text">{hotel.city}, {hotel.country}</span>
                 </div>
-                <span className="live-badge"><span className="live-dot" />Live</span>
+                {testMode ? (
+                    <Badge color="amber">TEST MODE</Badge>
+                ) : (
+                    <span className="live-badge"><span className="live-dot" />Live</span>
+                )}
             </div>
         </div>
     );
