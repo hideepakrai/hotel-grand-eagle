@@ -123,6 +123,8 @@ const dtTomorrow = new Date();
 dtTomorrow.setDate(dtTomorrow.getDate() + 1);
 const dtOut = dtTomorrow.toLocaleDateString('en-CA');
 const dtToday = dtIn;
+const isEmailValid = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isPhoneValid = (phone: string) => /^\d{10}$/.test(phone);
 
 function BookingForm() {
     const searchParams = useSearchParams();
@@ -219,6 +221,16 @@ function BookingForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!isEmailValid(guestInfo.email)) {
+            alert("Please enter a valid email address.");
+            return;
+        }
+        if (!isPhoneValid(guestInfo.phone)) {
+            alert("Please enter a valid 10-digit phone number.");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const rRes = await fetch(`/api/rooms?checkIn=${checkIn}&checkOut=${checkOut}&roomTypeId=${selectedRoomId}`);
@@ -463,11 +475,20 @@ function BookingForm() {
                                     <div className="book-contact-row">
                                         <div>
                                             <label className="input-label" style={{ color: "var(--ivory-dim)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, display: "block" }}>Email Address</label>
-                                            <input required className="form-input" type="email" value={guestInfo.email} onChange={e => setGuestInfo(p => ({...p, email: e.target.value}))} />
+                                            <input required className="form-input" type="email" value={guestInfo.email} onChange={e => setGuestInfo(p => ({...p, email: e.target.value}))} placeholder="email@example.com" />
+                                            {guestInfo.email && !isEmailValid(guestInfo.email) && (
+                                                <div style={{ color: "#ff4d4d", fontSize: "10px", marginTop: "6px", letterSpacing: "0.05em" }}>INVALID EMAIL FORMAT</div>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="input-label" style={{ color: "var(--ivory-dim)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, display: "block" }}>Phone Number</label>
-                                            <input required className="form-input" type="tel" value={guestInfo.phone} onChange={e => setGuestInfo(p => ({...p, phone: e.target.value}))} />
+                                            <input required className="form-input" type="tel" value={guestInfo.phone} onChange={e => {
+                                                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                setGuestInfo(p => ({...p, phone: val}));
+                                            }} placeholder="10-digit mobile number" />
+                                            {guestInfo.phone && !isPhoneValid(guestInfo.phone) && (
+                                                <div style={{ color: "#ff4d4d", fontSize: "10px", marginTop: "6px", letterSpacing: "0.05em" }}>MUST BE 10 DIGITS</div>
+                                            )}
                                         </div>
                                     </div>
                                     <div>

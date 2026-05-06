@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,6 +42,13 @@ export function Sidebar() {
     const { collapsed, setCollapsed, mobileNavOpen, setMobileNavOpen, testMode, toggleTestMode } = useAdmin();
     const pathname = usePathname();
     
+    const handleLogout = async () => {
+        if (confirm("Are you sure you want to log out from the Admin Panel?")) {
+            await fetch("/api/auth/logout", { method: "POST" });
+            window.location.href = "/";
+        }
+    };
+    
     return (
         <>
             <div className={`sidebar-overlay ${mobileNavOpen ? "" : "hidden"}`} onClick={() => setMobileNavOpen(false)} />
@@ -68,6 +76,10 @@ export function Sidebar() {
                     {!collapsed && <div style={{ fontSize: 10, color: testMode ? "#fbbf24" : "#6b7280", marginTop: 4, fontWeight: 500 }}>{testMode ? "Writing to Test Database" : "Using Production Database"}</div>}
                 </div>
                 <div className="sidebar-footer">
+                    <button onClick={handleLogout} className="nav-item" title={collapsed ? "Logout" : ""}>
+                        <span className="nav-item-icon" style={{ color: "#f87171" }}><Ic.Logout /></span>
+                        {!collapsed && <span className="nav-item-label" style={{ color: "#f87171" }}>Sign Out</span>}
+                    </button>
                     <button onClick={() => setCollapsed(!collapsed)} className="nav-item">
                         <span className="nav-item-icon"><Ic.Chev r={collapsed} /></span>
                         {!collapsed && <span className="nav-item-label">Collapse</span>}
