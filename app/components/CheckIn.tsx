@@ -7,6 +7,7 @@ interface Props {
     bookings: Booking[];
     customers: Customer[];
     rooms: Room[];
+    inventory: RoomItem[];
     mealPlans: MealPlan[];
     availability: Record<string, Availability>;
     onCheckIn: (bookingId: string, roomNumber: string, mealPlanId: string) => void;
@@ -14,7 +15,7 @@ interface Props {
 
 type Step = 1 | 2 | 3 | 4;
 
-export default function CheckInPage({ bookings, customers, rooms, mealPlans, availability, onCheckIn }: Props) {
+export default function CheckInPage({ bookings, customers, rooms, inventory, mealPlans, availability, onCheckIn }: Props) {
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<Booking | null>(null);
     const [roomNum, setRoomNum] = useState("");
@@ -33,8 +34,7 @@ export default function CheckInPage({ bookings, customers, rooms, mealPlans, ava
 
     const availableRooms = useMemo(() => {
         if (!selected) return [];
-        const rt = rooms.find(r => r.id === selected.roomTypeId);
-        const roomNums = rt?.roomNumbers ?? [];
+        const roomNums = inventory.filter(ri => ri.roomTypeId === selected.roomTypeId).map(ri => ri.roomNumber);
         const occupied = bookings.filter(b => b.roomTypeId === selected.roomTypeId && b.status === "checked-in" && b.roomNumber).map(b => b.roomNumber!);
         return roomNums.filter(n => !occupied.includes(n));
     }, [selected, rooms, bookings]);

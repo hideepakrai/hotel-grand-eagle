@@ -80,6 +80,10 @@ function isRoomConflict(roomNumber: string, roomTypeId: string, checkIn: string,
     );
 }
 
+const isAadharValid = (val?: string) => !val || val.length === 12;
+const isEmailValid = (val?: string) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+const isPhoneValid = (val?: string) => !val || val.length === 10;
+
 /** Month filter pill bar */
 function MonthPills({ selected, onSelect }: { selected: string; onSelect: (v: string) => void }) {
     return (
@@ -256,7 +260,19 @@ function CoGuestSection({
                         </div>
                         <div className="grid-3" style={{ gap: 8 }}>
                             <Field label="Full Name"><Inp value={g.name} onChange={e => upd(g.id, "name", e.target.value)} placeholder="Guest name" /></Field>
-                            <Field label="Aadhar Number"><Inp value={g.aadharNo} onChange={e => upd(g.id, "aadharNo", e.target.value)} placeholder="Aadhar number" /></Field>
+                            <Field label="Aadhar Number">
+                                <Inp 
+                                    value={g.aadharNo} 
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                        upd(g.id, "aadharNo", val);
+                                    }} 
+                                    placeholder="12-digit Aadhar number" 
+                                />
+                                {g.aadharNo && g.aadharNo.length !== 12 && (
+                                    <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4, fontWeight: 600 }}>Aadhar must be 12 digits</div>
+                                )}
+                            </Field>
                             <Field label="Upload Aadhar">
                                 <FilePicker 
                                     file={files[g.id] || null} 
@@ -273,7 +289,19 @@ function CoGuestSection({
                         <div className="grid-4" style={{ gap: 8, marginTop: 8 }}>
                             <Field label="Nationality"><Inp value={g.nationality} onChange={e => upd(g.id, "nationality", e.target.value)} placeholder="Country" /></Field>
                             <Field label="Date of Birth"><Inp type="date" value={g.dob} onChange={e => upd(g.id, "dob", e.target.value)} /></Field>
-                            <Field label="Phone"><Inp value={g.phone} onChange={e => upd(g.id, "phone", e.target.value)} placeholder="+91 98765 43210" /></Field>
+                            <Field label="Phone">
+                                <Inp 
+                                    value={g.phone} 
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        upd(g.id, "phone", val);
+                                    }} 
+                                    placeholder="10 digit phone number" 
+                                />
+                                {g.phone && !isPhoneValid(g.phone) && (
+                                    <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4, fontWeight: 600 }}>Phone must be 10 digits</div>
+                                )}
+                            </Field>
                             {!isChild && <Field label="Dietary Pref"><Sel value={g.dietaryPref} onChange={e => upd(g.id, "dietaryPref", e.target.value)} opts={DIETARY_PREFS} /></Field>}
                         </div>
                     </div>
@@ -537,7 +565,19 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                             <Field label="Booking Ref"><Inp value={b.bookingRef} onChange={s("bookingRef")} /></Field>
                         </div>
                         <div className="grid-2 mb-12">
-                            <Field label="Aadhar Number"><Inp value={b.primaryAadharNo || ""} onChange={s("primaryAadharNo" as keyof Booking)} placeholder="Aadhar number" /></Field>
+                            <Field label="Aadhar Number">
+                                <Inp 
+                                    value={b.primaryAadharNo || ""} 
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                        setB(p => ({ ...p, primaryAadharNo: val }));
+                                    }} 
+                                    placeholder="12-digit Aadhar number" 
+                                />
+                                {b.primaryAadharNo && b.primaryAadharNo.length !== 12 && (
+                                    <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4, fontWeight: 600 }}>Aadhar must be 12 digits</div>
+                                )}
+                            </Field>
                             <Field label="Upload Aadhar">
                                 <FilePicker 
                                     file={primaryFile} 
@@ -551,8 +591,25 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                             </Field>
                         </div>
                         <div className="grid-3 mb-12">
-                            <Field label="Email"><Inp value={b.guestEmail} onChange={s("guestEmail")} type="email" /></Field>
-                            <Field label="Phone"><Inp value={b.guestPhone} onChange={s("guestPhone")} /></Field>
+                            <Field label="Email">
+                                <Inp value={b.guestEmail} onChange={s("guestEmail")} type="email" placeholder="email@example.com" />
+                                {b.guestEmail && !isEmailValid(b.guestEmail) && (
+                                    <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4, fontWeight: 600 }}>Invalid email format</div>
+                                )}
+                            </Field>
+                            <Field label="Phone">
+                                <Inp 
+                                    value={b.guestPhone} 
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        setB(p => ({ ...p, guestPhone: val }));
+                                    }} 
+                                    placeholder="10 digit phone number" 
+                                />
+                                {b.guestPhone && !isPhoneValid(b.guestPhone) && (
+                                    <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4, fontWeight: 600 }}>Phone must be 10 digits</div>
+                                )}
+                            </Field>
                             <Field label="Source"><Sel value={b.bookingSource} onChange={s("bookingSource")} opts={BOOKING_SOURCES} /></Field>
                         </div>
                         <div className="grid-3 mb-12">
@@ -723,7 +780,12 @@ function BookingModal({ booking: init, roomTypes, physicalRooms, mealPlans, cust
                                 !b.guestName.trim() ||
                                 !!conflict ||
                                 b.adults < 1 || b.adults > 10 ||
-                                b.children < 0 || b.children > 20
+                                b.children < 0 || b.children > 20 ||
+                                !isAadharValid(b.primaryAadharNo) ||
+                                (b.coGuests ?? []).some(g => !isAadharValid(g.aadharNo)) ||
+                                !isEmailValid(b.guestEmail) ||
+                                !isPhoneValid(b.guestPhone) ||
+                                (b.coGuests ?? []).some(g => !isPhoneValid(g.phone))
                             }
                         >
                             {isUploading ? "Uploading..." : "Save Booking"}

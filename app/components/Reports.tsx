@@ -6,6 +6,7 @@ import { fmtDate, fmt } from "./ui";
 interface Props {
     bookings: Booking[];
     rooms: Room[];
+    inventory: RoomItem[];
     mealPlans: MealPlan[];
     hkTasks: HousekeepingTask[];
 }
@@ -29,7 +30,7 @@ function getMonthOptions() {
 }
 const MONTH_OPTIONS = getMonthOptions();
 
-export default function ReportsPage({ bookings, rooms, mealPlans, hkTasks }: Props) {
+export default function ReportsPage({ bookings, rooms, inventory, mealPlans, hkTasks }: Props) {
     const [tab, setTab] = useState<"occupancy" | "arrivals" | "inhouse" | "revenue" | "cancellations" | "nightaudit">("occupancy");
     const [dateFrom, setDateFrom] = useState(addDays(TODAY, -30));
     const [dateTo, setDateTo] = useState(TODAY);
@@ -49,7 +50,7 @@ export default function ReportsPage({ bookings, rooms, mealPlans, hkTasks }: Pro
             let totalOccupiedNights = 0;
             relevantBookings.forEach(b => { totalOccupiedNights += b.nights; });
             const days = Math.max(1, Math.round((new Date(dateTo).getTime() - new Date(dateFrom).getTime()) / 86400000));
-            const totalRooms = r.roomNumbers?.length ?? 0;
+            const totalRooms = inventory.filter(ri => ri.roomTypeId === r.id).length;
             const occupancyPct = totalRooms > 0 ? Math.min(100, Math.round((totalOccupiedNights / (totalRooms * days)) * 100)) : 0;
             const revenue = relevantBookings.reduce((s, b) => s + b.totalRoomCost, 0);
             return { room: r, bookings: relevantBookings.length, nights: totalOccupiedNights, pct: occupancyPct, revenue };
