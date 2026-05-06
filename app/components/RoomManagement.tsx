@@ -133,7 +133,7 @@ function RoomForm({ initial, amenityCats, onSave, onCancel }: { initial?: Room; 
     );
 }
 
-export function RoomManagement({ rooms, amenityCats, onAdd, onEdit, onDelete }: { rooms: Room[]; amenityCats: AmenityCat[]; onAdd: (r: Room) => void; onEdit: (r: Room) => void; onDelete: (id: string) => void; }) {
+export function RoomManagement({ rooms, inventory, amenityCats, onAdd, onEdit, onDelete }: { rooms: Room[]; inventory: RoomItem[]; amenityCats: AmenityCat[]; onAdd: (r: Room) => void; onEdit: (r: Room) => void; onDelete: (id: string) => void; }) {
     const [view, setView] = useState<"list" | "add" | "edit">("list"); const [target, setTarget] = useState<Room | null>(null); const [delId, setDelId] = useState<string | null>(null);
     const facilityMap = useMemo(() => { const m: Record<string, string> = {}; amenityCats.forEach(c => c.facilities.forEach(f => { m[f.id] = f.name; })); return m; }, [amenityCats]);
     if (view === "add") return <RoomForm amenityCats={amenityCats} onSave={r => { onAdd(r); setView("list"); }} onCancel={() => setView("list")} />;
@@ -149,7 +149,14 @@ export function RoomManagement({ rooms, amenityCats, onAdd, onEdit, onDelete }: 
                         <div className="room-actions"><Btn size="sm" variant="secondary" onClick={() => { setTarget(room); setView("edit"); }}><Ic.Edit />Edit</Btn><Btn size="sm" variant="danger" onClick={() => setDelId(room.id)}><Ic.Trash /></Btn></div>
                     </div>
                     <div className="room-attrs"><span className="room-attr">👥 Max {room.maxOccupancy}</span><span className="room-attr">📐 {room.roomSize} m²</span><span className="room-attr">🪟 {room.view}</span><span className="room-attr">🏢 {room.floorPreference}</span><span className="room-attr">💰 {room.currency} {room.basePrice.toLocaleString()}/night</span><span className="room-attr">🚿 {room.bathroomType}</span><span className="room-attr">🚿 {room.soundproofingLevel}</span><span className="room-attr">🎭 {room.roomTheme}</span></div>
-                    {room.roomNumbers && room.roomNumbers.length > 0 && <div style={{ padding: "6px 20px 10px", fontSize: 12, color: "#6b7280" }}>Rooms: {room.roomNumbers.join(", ")}</div>}
+                    {(() => {
+                        const assignedRooms = inventory.filter(ri => ri.roomTypeId === room.id).map(ri => ri.roomNumber).sort();
+                        return (
+                            <div style={{ padding: "6px 20px 10px", fontSize: 12, color: "#6b7280" }}>
+                                <b>Rooms:</b> {assignedRooms.length > 0 ? assignedRooms.join(", ") : "No rooms assigned"}
+                            </div>
+                        );
+                    })()}
                     {room.amenityIds.length > 0 && <div className="room-amenities">{room.amenityIds.slice(0, 8).map(id => <Badge key={id} color="gray">{facilityMap[id] || id}</Badge>)}{room.amenityIds.length > 8 && <Badge color="gray">+{room.amenityIds.length - 8} more</Badge>}</div>}
                 </div>
             ))}

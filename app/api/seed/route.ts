@@ -73,7 +73,6 @@ const ROOMS = [
             "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800",
             "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800",
         ],
-        roomNumbers: ["101", "102", "103", "104", "105", "201", "202", "203"],
     },
     {
         id: "rm2",
@@ -101,7 +100,6 @@ const ROOMS = [
             "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800",
             "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800",
         ],
-        roomNumbers: ["501", "502", "503"],
     },
     {
         id: "rm3",
@@ -128,12 +126,11 @@ const ROOMS = [
         images: [
             "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800",
         ],
-        roomNumbers: ["301", "302", "303", "304", "305", "306", "307", "308", "309", "310"],
     },
 ];
 
 // Keep a simple version for booking generation
-const ROOM_TYPES = ROOMS.map(r => ({ id: r.id, name: r.roomName, basePrice: r.basePrice, rooms: r.roomNumbers }));
+const ROOM_TYPES = ROOMS.map(r => ({ id: r.id, name: r.roomName, basePrice: r.basePrice }));
 
 const MEAL_PLANS = [
     { id: "mp_ep", code: "EP", name: "European Plan", description: "Room only, no meals included", pricePerPersonPerNight: 0 },
@@ -230,7 +227,7 @@ export async function GET() {
         const DELUXE_FEATURES = ["Corner Room", "Connecting Door", "Accessible", "City View Premium", "Extra Quiet"];
         const SUITE_FEATURES = ["Butler Service", "Private Terrace", "Panoramic View", "Connecting Door", "Extra King Bed"];
         const TWIN_FEATURES = ["Accessible", "Garden View", "Connecting Door", "Ground Floor", "Extra Quiet"];
-        await db.collection("rooms").insertMany([
+        const ROOM_INVENTORY = [
             // Deluxe King Rooms — Floor 1
             ...["101", "102", "103", "104", "105"].map((n, i) => ({
                 id: `room_${n}`, roomNumber: n, roomTypeId: "rm1", roomTypeName: "Deluxe King Room",
@@ -267,7 +264,15 @@ export async function GET() {
                 notes: n === "501" ? "VIP suite — dedicated butler" : "",
                 lastCleaned: addDays(NOW, -1), createdAt: new Date().toISOString(),
             })),
-        ]);
+        ];
+        await db.collection("rooms").insertMany(ROOM_INVENTORY);
+
+        // Map room type IDs to their assigned room numbers for seed generation
+        const roomsByTypeId: Record<string, string[]> = {};
+        ROOM_INVENTORY.forEach(r => {
+            if (!roomsByTypeId[r.roomTypeId]) roomsByTypeId[r.roomTypeId] = [];
+            roomsByTypeId[r.roomTypeId].push(r.roomNumber);
+        });
 
         // Insert customers
 
@@ -294,7 +299,8 @@ export async function GET() {
             const adults = Math.floor(Math.random() * 2) + 1;
             const children = Math.random() > 0.7 ? Math.floor(Math.random() * 2) + 1 : 0;
             const mealPlan = MEAL_PLANS[Math.floor(Math.random() * MEAL_PLANS.length)];
-            const roomNo = rt.rooms[Math.floor(Math.random() * rt.rooms.length)];
+            const typeRooms = roomsByTypeId[rt.id] || [];
+            const roomNo = typeRooms[Math.floor(Math.random() * typeRooms.length)];
             const totalMealCost = mealPlan.pricePerPersonPerNight * (adults + children) * nights;
             const totalRoomCost = rt.basePrice * nights;
 
@@ -339,7 +345,8 @@ export async function GET() {
             const adults = Math.floor(Math.random() * 2) + 1;
             const children = Math.random() > 0.8 ? 1 : 0;
             const mealPlan = MEAL_PLANS[Math.floor(Math.random() * MEAL_PLANS.length)];
-            const roomNo = rt.rooms[Math.floor(Math.random() * rt.rooms.length)];
+            const typeRooms = roomsByTypeId[rt.id] || [];
+            const roomNo = typeRooms[Math.floor(Math.random() * typeRooms.length)];
             const totalMealCost = mealPlan.pricePerPersonPerNight * (adults + children) * nights;
             const totalRoomCost = rt.basePrice * nights;
 
@@ -424,7 +431,8 @@ export async function GET() {
         const HK_STATUSES = ["clean", "dirty", "inspected", "dnd", "out-of-order"];
         const HK_PRIORITY = ["low", "medium", "high"];
         ROOM_TYPES.forEach(rt => {
-            rt.rooms.forEach(roomNo => {
+            const typeRooms = roomsByTypeId[rt.id] || [];
+            typeRooms.forEach(roomNo => {
                 const status = HK_STATUSES[Math.floor(Math.random() * HK_STATUSES.length)];
                 hkTasks.push({
                     id: uid(), roomTypeId: rt.id, roomNumber: roomNo,
@@ -449,7 +457,8 @@ export async function GET() {
         const maintenanceTasks: object[] = [];
         for (let i = 0; i < 15; i++) {
             const rt = ROOM_TYPES[Math.floor(Math.random() * rtLen)];
-            const roomNo = rt.rooms[Math.floor(Math.random() * rt.rooms.length)];
+            const typeRooms = roomsByTypeId[rt.id] || [];
+            const roomNo = typeRooms[Math.floor(Math.random() * typeRooms.length)];
             maintenanceTasks.push({
                 id: uid(),
                 roomNumber: roomNo,
