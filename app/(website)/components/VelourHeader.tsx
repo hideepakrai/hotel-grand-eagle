@@ -86,8 +86,17 @@ export default function VelourHeader() {
                                 </button>
                                 {dropdownOpen && (
                                     <div className="vh-dropdown">
-                                        <Link href="/my-bookings" className="vh-dropdown-item" onClick={() => setDropdownOpen(false)} style={{ textDecoration: "none" }}>My Bookings</Link>
-                                        <button className="vh-dropdown-item" onClick={handleLogout}>Logout</button>
+                                        {user.role === "admin" ? (
+                                            <>
+                                                <Link href="/admin" className="vh-dropdown-item" onClick={() => setDropdownOpen(false)} style={{ textDecoration: "none" }}>Admin Panel</Link>
+                                                <button className="vh-dropdown-item" onClick={handleLogout}>Sign Out</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Link href="/my-bookings" className="vh-dropdown-item" onClick={() => setDropdownOpen(false)} style={{ textDecoration: "none" }}>My Bookings</Link>
+                                                <button className="vh-dropdown-item" onClick={handleLogout}>Logout</button>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -135,12 +144,25 @@ export default function VelourHeader() {
                             ))}
                             {user ? (
                                 <>
-                                    <Link href="/my-bookings" className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%", textDecoration: "none", display: "block" }} onClick={() => setMobileOpen(false)}>
-                                        MY BOOKINGS
-                                    </Link>
-                                    <button className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%" }} onClick={() => { handleLogout(); setMobileOpen(false); }}>
-                                        LOGOUT
-                                    </button>
+                                    {user.role === "admin" ? (
+                                        <>
+                                            <Link href="/admin" className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%", textDecoration: "none", display: "block" }} onClick={() => setMobileOpen(false)}>
+                                                ADMIN PANEL
+                                            </Link>
+                                            <button className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%" }} onClick={() => { handleLogout(); setMobileOpen(false); }}>
+                                                SIGN OUT
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link href="/my-bookings" className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%", textDecoration: "none", display: "block" }} onClick={() => setMobileOpen(false)}>
+                                                MY BOOKINGS
+                                            </Link>
+                                            <button className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%" }} onClick={() => { handleLogout(); setMobileOpen(false); }}>
+                                                LOGOUT
+                                            </button>
+                                        </>
+                                    )}
                                 </>
                             ) : (
                                 <Link href="/sign-in" className="vh-drawer-link" style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", width: "100%", textDecoration: "none", display: "block" }} onClick={() => setMobileOpen(false)}>
