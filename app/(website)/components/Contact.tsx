@@ -1,17 +1,52 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import type { Hotel } from "../../components/types";
 
 export default function Contact() {
   const [formSent, setFormSent] = useState(false);
-  const [hotel, setHotel] = useState<any>(null);
+  const [sending, setSending] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [hotel, setHotel] = useState<Hotel | null>(null);
 
   useEffect(() => {
     fetch("/api/hotel-settings").then(r => r.json()).then(d => { if (d.name) setHotel(d); }).catch(() => {});
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormSent(true);
+    setSending(true);
+    setFormError("");
+
+    const form = new FormData(e.currentTarget);
+    const payload = {
+      name: String(form.get("name") || ""),
+      email: String(form.get("email") || ""),
+      phone: String(form.get("phone") || ""),
+      checkIn: String(form.get("checkIn") || ""),
+      checkOut: String(form.get("checkOut") || ""),
+      guests: String(form.get("guests") || ""),
+      message: String(form.get("message") || ""),
+      source: "Home page contact section",
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Unable to submit enquiry. Please try again.");
+      }
+
+      setFormSent(true);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Unable to submit enquiry. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -98,11 +133,12 @@ export default function Contact() {
             {!formSent ? (
               <form id="contact-form" onSubmit={handleSubmit}>
                 <div className="form-row">
-                  <input className="form-input" type="text" placeholder="Full Name" required />
-                  <input className="form-input" type="email" placeholder="Email Address" required />
+                  <input className="form-input" name="name" type="text" placeholder="Full Name" required />
+                  <input className="form-input" name="email" type="email" placeholder="Email Address" required />
                 </div>
                 <input
                   className="form-input"
+                  name="phone"
                   type="tel"
                   placeholder="Phone Number"
                   style={{ marginBottom: "12px", display: "block" }}
@@ -110,14 +146,14 @@ export default function Contact() {
                 <div className="form-row">
                   <div>
                     <label className="input-label">Check In</label>
-                    <input className="form-input" type="date" />
+                    <input className="form-input" name="checkIn" type="date" />
                   </div>
                   <div>
                     <label className="input-label">Check Out</label>
-                    <input className="form-input" type="date" />
+                    <input className="form-input" name="checkOut" type="date" />
                   </div>
                 </div>
-                <select className="form-select" style={{ marginBottom: "12px", display: "block" }} defaultValue="">
+                <select className="form-select" name="guests" style={{ marginBottom: "12px", display: "block" }} defaultValue="">
                   <option value="" disabled>
                     Number of Guests
                   </option>
@@ -127,11 +163,18 @@ export default function Contact() {
                 </select>
                 <textarea
                   className="form-textarea"
+                  name="message"
                   rows={4}
                   placeholder="Special requests or questions..."
+                  required
                 ></textarea>
-                <button type="submit" className="btn-submit">
-                  Send Enquiry
+                {formError && (
+                  <p role="alert" style={{ color: "#ff9999", fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>
+                    {formError}
+                  </p>
+                )}
+                <button type="submit" className="btn-submit" disabled={sending} style={{ opacity: sending ? 0.65 : 1, cursor: sending ? "not-allowed" : "pointer" }}>
+                  {sending ? "Sending..." : "Send Enquiry"}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22,2 15,22 11,13 2,9" />

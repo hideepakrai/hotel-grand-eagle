@@ -1,239 +1,352 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useMemo, useState } from "react";
 import NearbyMap from "../components/NearbyMap";
+import type { NearbyPlace } from "../../components/types";
 
 interface Attraction {
+    id: string;
     name: string;
     timing: string;
+    description: string;
+    lat?: number;
+    lng?: number;
 }
 
 interface Category {
     id: string;
     title: string;
+    subtitle: string;
     items: Attraction[];
 }
 
 const CATEGORIES: Category[] = [
     {
-        id: "airport",
-        title: "AIRPORT",
+        id: "travel",
+        title: "Travel Hubs",
+        subtitle: "Airport and railway access",
         items: [
-            { name: "Jaipur International Airport", timing: "20min" }
-        ]
+            { id: "airport", name: "Jaipur International Airport", timing: "20 min", description: "Convenient access for business and leisure travellers.", lat: 26.8242, lng: 75.8122 },
+            { id: "jagatpura", name: "Jagatpura Railway Station", timing: "8 min", description: "Useful local rail connectivity near Sitapura.", lat: 26.8325, lng: 75.8366 },
+        ],
     },
     {
-        id: "landmark",
-        title: "LANDMARK",
+        id: "landmarks",
+        title: "Landmarks",
+        subtitle: "Daily essentials and local points",
         items: [
-            { name: "D'Mart", timing: "3 min" },
-            { name: "Sitapura Industrial Area", timing: "3 min" },
-            { name: "Viva city mall", timing: "4 min" },
-            { name: "Capital Mall", timing: "5 min" },
-            { name: "Akshay Patra Temple", timing: "5 min" },
-            { name: "Jagatpura Railway Station", timing: "8 min" }
-        ]
+            { id: "dmart", name: "D'Mart", timing: "3 min", description: "Nearby shopping for daily essentials.", lat: 26.7799, lng: 75.8141 },
+            { id: "sitapura", name: "Sitapura Industrial Area", timing: "3 min", description: "Prime business and industrial district of Jaipur.", lat: 26.7769, lng: 75.8123 },
+            { id: "vivacity", name: "Viva City Mall", timing: "4 min", description: "Quick shopping and food options close to the hotel.", lat: 26.7798, lng: 75.8069 },
+            { id: "capital", name: "Capital Mall", timing: "5 min", description: "Nearby mall for retail and casual dining.", lat: 26.7826, lng: 75.8101 },
+            { id: "akshaya", name: "Akshaya Patra Temple", timing: "5 min", description: "A well-known local spiritual landmark.", lat: 26.7804, lng: 75.8346 },
+        ],
     },
     {
-        id: "schools",
-        title: "School's & Colleges",
+        id: "education",
+        title: "Schools & Colleges",
+        subtitle: "Universities and institutions",
         items: [
-            { name: "JECRC University", timing: "5 min" },
-            { name: "Poornima University", timing: "5 min" },
-            { name: "VIT University", timing: "5 min" },
-            { name: "Gyan vihar University", timing: "4 min" },
-            { name: "Maharaja sawai bhawani Singh school", timing: "8 min" },
-            { name: "SRN International school", timing: "5 min" },
-            { name: "Jaishree Periwal Global school", timing: "5 min" },
-            { name: "Ryan International school", timing: "5 min" }
-        ]
+            { id: "jecrc", name: "JECRC University", timing: "5 min", description: "Major university near Sitapura.", lat: 26.7815, lng: 75.8222 },
+            { id: "poornima", name: "Poornima University", timing: "5 min", description: "Close access for visiting students and families.", lat: 26.7689, lng: 75.8516 },
+            { id: "vit", name: "VIT University", timing: "5 min", description: "Nearby academic institution.", lat: 26.7821, lng: 75.8252 },
+            { id: "gyan", name: "Gyan Vihar University", timing: "4 min", description: "Popular university campus close by.", lat: 26.8097, lng: 75.8493 },
+            { id: "srn", name: "SRN International School", timing: "5 min", description: "School access for local visits.", lat: 26.7709, lng: 75.8217 },
+            { id: "jpis", name: "Jaishree Periwal Global School", timing: "5 min", description: "Well-connected school near the hotel.", lat: 26.7784, lng: 75.8504 },
+        ],
     },
     {
-        id: "hospitals",
+        id: "healthcare",
         title: "Hospitals",
+        subtitle: "Healthcare nearby",
         items: [
-            { name: "Bombay hospital", timing: "3 min" },
-            { name: "Jeevan rekha hospital", timing: "4 min" },
-            { name: "Medical college hospital", timing: "5 min" },
-            { name: "Mahatma Gandhi hospital", timing: "5 min" },
-            { name: "Narayana multi speciality hospital", timing: "8 min" }
-        ]
-    }
+            { id: "bombay", name: "Bombay Hospital", timing: "3 min", description: "Quick healthcare access close to the property.", lat: 26.7813, lng: 75.8094 },
+            { id: "jeevan", name: "Jeevan Rekha Hospital", timing: "4 min", description: "Nearby hospital for urgent support.", lat: 26.8022, lng: 75.8173 },
+            { id: "mg", name: "Mahatma Gandhi Hospital", timing: "5 min", description: "Major hospital and medical college nearby.", lat: 26.7759, lng: 75.8379 },
+            { id: "narayana", name: "Narayana Multispeciality Hospital", timing: "8 min", description: "Multispeciality medical care within easy reach.", lat: 26.8395, lng: 75.7943 },
+        ],
+    },
 ];
 
+function toNearbyPlace(item: Attraction): NearbyPlace {
+    return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        distance: item.timing,
+        image: "",
+        lat: item.lat,
+        lng: item.lng,
+        createdAt: "static",
+    };
+}
+
 export default function NearbyPage() {
-    const [activeCategory, setActiveCategory] = useState<string>("airport");
+    const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
+    const [selectedPlaceId, setSelectedPlaceId] = useState(CATEGORIES[0].items[0].id);
+
+    const active = CATEGORIES.find(cat => cat.id === activeCategory) || CATEGORIES[0];
+    const mapPlaces = useMemo(() => CATEGORIES.flatMap(cat => cat.items.map(toNearbyPlace)), []);
 
     return (
-        <div style={{ 
-            background: "var(--midnight)", 
-            minHeight: "100vh", 
-            paddingTop: "160px", 
-            paddingBottom: "112px",
-            fontFamily: "var(--font-primary)",
-            position: "relative",
-            overflow: "hidden"
-        }}>
-            {/* Background Branding Text */}
-            <div style={{ 
-                position: "absolute", 
-                top: 100, 
-                left: "50%", 
-                transform: "translateX(-50%)", 
-                fontSize: "clamp(60px, 15vw, 180px)", 
-                fontWeight: 900, 
-                color: "rgba(212,168,87,0.03)", 
-                whiteSpace: "nowrap", 
-                zIndex: 0,
-                pointerEvents: "none",
-                textTransform: "uppercase"
-            }}>
-                Nearby Attractions
-            </div>
+        <div className="nearby-page">
+            <div className="nearby-bg-text">Nearby</div>
 
-            <div className="max-w" style={{ position: "relative", zIndex: 1 }}>
-                {/* Header Section */}
-                <div style={{ textAlign: "center", marginBottom: 80 }}>
+            <div className="max-w nearby-shell">
+                <div className="nearby-header">
                     <div className="section-eyebrow fade-in-up visible" style={{ justifyContent: "center" }}>
-                        <span className="line"></span>
+                        <span className="line" />
                         <span>Local Discoveries</span>
-                        <span className="line"></span>
+                        <span className="line" />
                     </div>
-                    <h1 className="section-title fade-in-up visible" style={{ fontSize: "clamp(32px, 6vw, 64px)", textTransform: "uppercase", marginBottom: 24 }}>
+                    <h1 className="section-title fade-in-up visible nearby-title">
                         Nearby <em>Attractions</em>
                     </h1>
-                    <p className="fade-in-up visible" style={{ fontSize: "16px", color: "var(--ivory-dim)", lineHeight: 1.8, maxWidth: "800px", margin: "0 auto" }}>
-                        Stay close to everything that matters. Hotel Grand Eagle is ideally situated near major landmarks, hospitals, shopping areas, and transport hubs, ensuring comfort, convenience, and easy connectivity throughout your visit.
+                    <p className="fade-in-up visible nearby-intro">
+                        Stay close to everything that matters. Hotel Grand Eagle keeps you near travel hubs, colleges, hospitals, shopping points, and Sitapura&apos;s business district.
                     </p>
                 </div>
 
-                <div style={{ 
-                    display: "grid", 
-                    gridTemplateColumns: "1.2fr 1fr", 
-                    gap: "60px", 
-                    alignItems: "start" 
-                }}>
-                    {/* Left: Accordion */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                        {CATEGORIES.map((cat) => {
-                            const isActive = activeCategory === cat.id;
-                            return (
-                                <div 
+                <div className="nearby-layout">
+                    <div className="nearby-content">
+                        <div className="nearby-tabs" aria-label="Nearby categories">
+                            {CATEGORIES.map(cat => (
+                                <button
                                     key={cat.id}
-                                    onMouseEnter={() => setActiveCategory(cat.id)}
-                                    style={{
-                                        background: isActive ? "var(--gold)" : "rgba(255,255,255,0.03)",
-                                        border: isActive ? "1px solid var(--gold)" : "1px solid rgba(212,168,87,0.1)",
-                                        borderRadius: "2px",
-                                        padding: isActive ? "32px 40px" : "24px 40px",
-                                        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        cursor: "default",
-                                        color: isActive ? "var(--midnight)" : "var(--ivory)"
+                                    type="button"
+                                    className={`nearby-tab${activeCategory === cat.id ? " active" : ""}`}
+                                    onClick={() => {
+                                        setActiveCategory(cat.id);
+                                        setSelectedPlaceId(cat.items[0]?.id || selectedPlaceId);
                                     }}
                                 >
-                                    <div style={{ 
-                                        display: "flex", 
-                                        justifyContent: "space-between", 
-                                        alignItems: "center",
-                                        marginBottom: isActive ? "24px" : "0"
-                                    }}>
-                                        <h2 style={{ 
-                                            margin: 0, 
-                                            fontSize: "13px", 
-                                            fontWeight: 700, 
-                                            letterSpacing: "0.15em",
-                                            textTransform: "uppercase"
-                                        }}>
-                                            {cat.title}
-                                        </h2>
-                                        {!isActive && (
-                                            <div style={{ 
-                                                width: "20px", 
-                                                height: "20px", 
-                                                display: "flex", 
-                                                alignItems: "center", 
-                                                justifyContent: "center",
-                                                color: "var(--gold)",
-                                                opacity: 0.6
-                                            }}>
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                    <path d="M5 12h14M12 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <span>{cat.title}</span>
+                                    <small>{cat.subtitle}</small>
+                                </button>
+                            ))}
+                        </div>
 
-                                    {isActive && (
-                                        <ul style={{ 
-                                            listStyle: "none", 
-                                            padding: 0, 
-                                            margin: 0,
-                                            animation: "fadeIn 0.5s ease-out"
-                                        }}>
-                                            {cat.items.map((item, idx) => (
-                                                <li key={idx} style={{ 
-                                                    marginBottom: "14px", 
-                                                    fontSize: "14px", 
-                                                    display: "flex",
-                                                    alignItems: "start",
-                                                    lineHeight: "1.6"
-                                                }}>
-                                                    <span style={{ 
-                                                        marginRight: "16px", 
-                                                        marginTop: "10px", 
-                                                        width: "30px", 
-                                                        height: "1px", 
-                                                        background: "var(--midnight)", 
-                                                        opacity: 0.3, 
-                                                        flexShrink: 0 
-                                                    }} />
-                                                    <span>
-                                                        <strong style={{ fontWeight: 700 }}>{item.name}</strong>
-                                                        <span style={{ opacity: 0.7, marginLeft: "8px" }}>— {item.timing}</span>
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        <div className="nearby-card-grid">
+                            {active.items.map(item => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    className={`nearby-place-card${selectedPlaceId === item.id ? " selected" : ""}`}
+                                    onClick={() => setSelectedPlaceId(item.id)}
+                                >
+                                    <span className="nearby-place-meta">{item.timing}</span>
+                                    <strong>{item.name}</strong>
+                                    <span>{item.description}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Right: Map */}
-                    <div className="fade-in-up visible" style={{ 
-                        position: "sticky", 
-                        top: "160px",
-                        height: "650px", 
-                        borderRadius: "2px", 
-                        overflow: "hidden",
-                        border: "1px solid rgba(212,168,87,0.2)",
-                        boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
-                    }}>
-                        <NearbyMap places={[]} />
+                    <div className="nearby-map-wrap fade-in-up visible">
+                        <NearbyMap places={mapPlaces} selectedPlaceId={selectedPlaceId} />
                     </div>
                 </div>
             </div>
 
             <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateX(-10px); }
-                    to { opacity: 1; transform: translateX(0); }
+                .nearby-page {
+                    background: var(--midnight);
+                    min-height: 100vh;
+                    padding: 160px 0 112px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .nearby-bg-text {
+                    position: absolute;
+                    top: 100px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: rgba(212, 168, 87, 0.035);
+                    font-size: clamp(72px, 16vw, 190px);
+                    font-weight: 800;
+                    letter-spacing: 0.04em;
+                    line-height: 1;
+                    pointer-events: none;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                }
+
+                .nearby-shell {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .nearby-header {
+                    text-align: center;
+                    margin-bottom: 72px;
+                }
+
+                .nearby-title {
+                    font-size: clamp(40px, 8vw, 84px);
+                }
+
+                .nearby-intro {
+                    color: var(--ivory-dim);
+                    font-size: 15px;
+                    line-height: 1.8;
+                    max-width: 760px;
+                    margin: 24px auto 0;
+                }
+
+                .nearby-layout {
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+                    gap: 48px;
+                    align-items: start;
+                }
+
+                .nearby-content {
+                    min-width: 0;
+                }
+
+                .nearby-tabs {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 14px;
+                    margin-bottom: 24px;
+                }
+
+                .nearby-tab,
+                .nearby-place-card {
+                    border: 1px solid rgba(212, 168, 87, 0.14);
+                    background: rgba(255, 255, 255, 0.03);
+                    color: var(--ivory-dim);
+                    cursor: pointer;
+                    font-family: inherit;
+                    text-align: left;
+                    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+                }
+
+                .nearby-tab {
+                    min-height: 86px;
+                    padding: 18px;
+                }
+
+                .nearby-tab span {
+                    color: var(--ivory);
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.14em;
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                }
+
+                .nearby-tab small {
+                    color: var(--ivory-dim);
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+
+                .nearby-tab:hover,
+                .nearby-place-card:hover {
+                    border-color: rgba(212, 168, 87, 0.38);
+                    transform: translateY(-2px);
+                }
+
+                .nearby-tab.active {
+                    background: var(--gold);
+                    border-color: var(--gold);
+                }
+
+                .nearby-tab.active span,
+                .nearby-tab.active small {
+                    color: var(--midnight);
+                }
+
+                .nearby-card-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 16px;
+                }
+
+                .nearby-place-card {
+                    min-height: 158px;
+                    padding: 24px;
+                }
+
+                .nearby-place-card strong {
+                    color: var(--ivory);
+                    display: block;
+                    font-size: 18px;
+                    line-height: 1.35;
+                    margin: 12px 0 10px;
+                }
+
+                .nearby-place-card span:last-child {
+                    display: block;
+                    font-size: 13px;
+                    line-height: 1.65;
+                }
+
+                .nearby-place-meta {
+                    color: var(--gold);
+                    display: inline-flex;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.12em;
+                    text-transform: uppercase;
+                }
+
+                .nearby-place-card.selected {
+                    background: rgba(212, 168, 87, 0.08);
+                    border-color: rgba(212, 168, 87, 0.5);
+                }
+
+                .nearby-map-wrap {
+                    border: 1px solid rgba(212, 168, 87, 0.2);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                    height: 650px;
+                    overflow: hidden;
+                    position: sticky;
+                    top: 120px;
                 }
 
                 @media (max-width: 1024px) {
-                    .max-w {
-                        grid-template-columns: 1fr !important;
+                    .nearby-page {
+                        padding-top: 132px;
                     }
-                    div[style*="position: sticky"] {
-                        position: relative !important;
-                        top: 0 !important;
-                        margin-top: 48px;
-                        height: 500px !important;
+
+                    .nearby-layout {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .nearby-map-wrap {
+                        height: 480px;
+                        position: relative;
+                        top: 0;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .nearby-page {
+                        padding: 116px 0 80px;
+                    }
+
+                    .nearby-header {
+                        margin-bottom: 42px;
+                    }
+
+                    .nearby-tabs,
+                    .nearby-card-grid {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .nearby-place-card {
+                        min-height: 0;
+                    }
+
+                    .nearby-map-wrap {
+                        height: 420px;
                     }
                 }
             `}</style>
         </div>
     );
 }
-
-

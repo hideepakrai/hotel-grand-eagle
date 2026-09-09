@@ -20,10 +20,12 @@ export default function NearbyMap({ places, selectedPlaceId }: NearbyMapProps) {
     const targetLat = selectedPlace && typeof selectedPlace.lat === "number" ? selectedPlace.lat : hotelLocation.lat;
     const targetLng = selectedPlace && typeof selectedPlace.lng === "number" ? selectedPlace.lng : hotelLocation.lng;
     const targetName = selectedPlace ? selectedPlace.name : hotelLocation.name;
+    const targetDescription = selectedPlace?.description || hotelLocation.address;
+    const targetDistance = selectedPlace?.distance;
 
     // Construct the Google Maps Embed URL
     const mapUrl = `https://maps.google.com/maps?q=${targetLat},${targetLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${hotelLocation.lat},${hotelLocation.lng}`;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}`;
 
     return (
         <div style={{ width: "100%", height: "100%", background: "#1a1a1a", position: "relative" }}>
@@ -43,7 +45,7 @@ export default function NearbyMap({ places, selectedPlaceId }: NearbyMapProps) {
                 position: "absolute",
                 top: 20,
                 left: 20,
-                width: "280px",
+                width: "min(280px, calc(100% - 40px))",
                 background: "#ffffff",
                 padding: "20px",
                 borderRadius: "8px",
@@ -51,27 +53,29 @@ export default function NearbyMap({ places, selectedPlaceId }: NearbyMapProps) {
                 zIndex: 10,
                 color: "#202124" // Google Map text color
             }}>
-                <div style={{ fontWeight: 600, fontSize: "18px", marginBottom: "4px" }}>{hotelLocation.name}</div>
+                <div style={{ fontWeight: 600, fontSize: "18px", marginBottom: "4px" }}>{targetName}</div>
                 
                 <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 500, color: "#d93025" }}>4.9</span>
-                    <div style={{ display: "flex", gap: "1px" }}>
-                        {[...Array(5)].map((_, i) => (
-                            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i < 4 ? "#fbbc04" : "url(#partialStar)"}>
-                                <defs>
-                                    <linearGradient id="partialStar">
-                                        <stop offset="90%" stopColor="#fbbc04" />
-                                        <stop offset="90%" stopColor="#dadce0" />
-                                    </linearGradient>
-                                </defs>
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                            </svg>
-                        ))}
-                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: "#d93025" }}>{targetDistance || "4.9"}</span>
+                    {!targetDistance && (
+                        <div style={{ display: "flex", gap: "1px" }}>
+                            {[...Array(5)].map((_, i) => (
+                                <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i < 4 ? "#fbbc04" : "url(#partialStar)"}>
+                                    <defs>
+                                        <linearGradient id="partialStar">
+                                            <stop offset="90%" stopColor="#fbbc04" />
+                                            <stop offset="90%" stopColor="#dadce0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ fontSize: "13px", color: "#5f6368", lineHeight: "1.4", marginBottom: "20px" }}>
-                    {hotelLocation.address}
+                    {targetDescription}
                 </div>
 
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -102,7 +106,7 @@ export default function NearbyMap({ places, selectedPlaceId }: NearbyMapProps) {
                     </a>
                     
                     <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${hotelLocation.lat},${hotelLocation.lng}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${targetLat},${targetLng}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

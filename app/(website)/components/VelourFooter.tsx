@@ -12,7 +12,7 @@ export default function VelourFooter() {
 
   return (
     <footer style={{ borderTop: "1px solid rgba(212,168,87,0.1)", background: "var(--midnight)", paddingTop: "60px", paddingBottom: "30px" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px" }}>
+      <div className="max-w-7xl mx-auto">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "40px", marginBottom: "40px" }}>
 
           {/* COLUMN 1: Logo & Description */}

@@ -3,6 +3,37 @@ import React, { useEffect, useState } from "react";
 import Loading from "../components/Loading";
 import type { CMSPage, AboutSection, TextImageSection, QuoteSection } from "../../components/types";
 
+const FALLBACK_ABOUT_SECTIONS: AboutSection[] = [
+    {
+        id: "fallback-about-main",
+        type: "text-image",
+        heading: "Budget-Friendly Stay in Jaipur",
+        description: "Hotel Grand Eagle is a value-for-money hotel offering clean, well-furnished rooms tailored for both business travelers and tourists. Each room is thoughtfully equipped with essentials such as air conditioning, private bathrooms, comfortable chairs, work desks, telephones, televisions, and 24/7 hot and cold water supply.\n\nLocated near JECC, major transport hubs, hospitals, colleges, and local food joints, our hotel is perfect for budget-conscious travelers seeking convenience and accessibility in Jaipur's Sitapura Industrial Area.",
+        highlightTerms: "value-for-money hotel, air conditioning, private bathrooms, work desks, televisions, 24/7 hot and cold water supply, JECC, transport hubs, budget-conscious travelers, Sitapura Industrial Area",
+        image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1200&auto=format&fit=crop",
+        imagePosition: "left",
+        stats: [
+            { id: "est", value: "2001", label: "Est. in Jaipur" },
+            { id: "support", value: "24/7", label: "Guest Support" },
+            { id: "nearby", value: "5 min", label: "Near JECC" },
+        ],
+    },
+    {
+        id: "fallback-about-quote",
+        type: "quote",
+        eyebrow: "Our Promise",
+        text: "Clean rooms, honest pricing, helpful service, and a convenient Jaipur location for every guest.",
+    },
+];
+
+function renderPageTitle(t: string) {
+    const words = t.split(" ");
+    if (words.length <= 1) return t;
+    const lastWord = words[words.length - 1];
+    const rest = words.slice(0, -1).join(" ");
+    return <>{rest} <em>{lastWord}</em></>;
+}
+
 // ── Highlight helper ──────────────────────────────────────────────────────────
 
 function renderWithHighlights(text: string, terms: string): React.ReactNode {
@@ -164,10 +195,31 @@ export default function AboutPage() {
     
     if (!isUsing) {
         return (
-            <div style={{ paddingTop: 160, paddingBottom: 112, background: "var(--midnight)", textAlign: "center", color: "var(--ivory-dim)" }}>
+            <div style={{ paddingTop: 160, paddingBottom: 112, background: "var(--midnight)" }}>
                 <div className="max-w">
-                    <h1 className="font-display" style={{ fontSize: "32px", marginBottom: "20px" }}>Discovering our heritage...</h1>
-                    <p>We are currently curating our story for you. Please check back shortly.</p>
+                    <div style={{ textAlign: "center", marginBottom: 80 }}>
+                        <div className="section-eyebrow fade-in-up visible" style={{ justifyContent: "center" }}>
+                            <span className="line" />
+                            <span>About Us</span>
+                            <span className="line" />
+                        </div>
+                        <h1 className="section-title fade-in-up visible" style={{ fontSize: "clamp(40px, 8vw, 84px)" }}>
+                            {renderPageTitle("Our Jaipur Story")}
+                        </h1>
+                        <p className="fade-in-up visible" style={{ color: "var(--ivory-dim)", fontSize: 15, lineHeight: 1.8, maxWidth: 720, margin: "24px auto 0" }}>
+                            Comfortable rooms, practical amenities, and easy access to Sitapura&apos;s business, education, healthcare, and travel hubs.
+                        </p>
+                    </div>
+
+                    {FALLBACK_ABOUT_SECTIONS.map(sec => {
+                        if (sec.type === "text-image") {
+                            return <TextImageSectionRender key={sec.id} sec={sec as TextImageSection} />;
+                        }
+                        if (sec.type === "quote") {
+                            return <QuoteSectionRender key={sec.id} sec={sec as QuoteSection} />;
+                        }
+                        return null;
+                    })}
                 </div>
             </div>
         );
@@ -176,15 +228,6 @@ export default function AboutPage() {
     const title = cmsData!.title || "About Us";
     const subtitle = cmsData!.subtitle || "Our Heritage";
     const sections = (cmsData!.sections || []) as AboutSection[];
-
-    // Render the page title with italic last word (e.g. "A legacy of _excellence_")
-    const renderTitle = (t: string) => {
-        const words = t.split(" ");
-        if (words.length <= 1) return t;
-        const lastWord = words[words.length - 1];
-        const rest = words.slice(0, -1).join(" ");
-        return <>{rest} <em>{lastWord}</em></>;
-    };
 
     return (
         <div style={{ paddingTop: 160, paddingBottom: 112, background: "var(--midnight)" }}>
@@ -197,7 +240,7 @@ export default function AboutPage() {
                         <span className="line" />
                     </div>
                     <h1 className="section-title fade-in-up visible" style={{ fontSize: "clamp(40px, 8vw, 84px)" }}>
-                        {renderTitle(title)}
+                        {renderPageTitle(title)}
                     </h1>
                 </div>
 

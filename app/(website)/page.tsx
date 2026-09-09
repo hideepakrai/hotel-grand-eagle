@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Hero from "./components/Hero";
 import Rooms from "./components/Rooms";
 import Testimonials from "./components/Testimonials";
 import Contact from "./components/Contact";
 import Loading from "./components/Loading";
 import NearbyPlaces from "./components/NearbyPlaces";
-import type { CMSPage, HeroSection, HomeTextSection, HomeQuoteSection, HomeTestimonialsSection, TextImageSection, AboutSection, AmenityCat } from "../components/types";
+import type { CMSPage, HeroSection, HomeTextSection, HomeQuoteSection, HomeTestimonialsSection, HomeSection, AmenityCat, Room } from "../components/types";
 
 // ─── Highlight helper (same as About page) ────────────────────────────────────
 
@@ -345,7 +346,7 @@ function QuoteRenderer({ sec }: { sec: HomeQuoteSection }) {
 
 export default function HomePage() {
     const [cmsData, setCmsData] = useState<CMSPage | null>(null);
-    const [rooms, setRooms] = useState<any[]>([]);
+    const [rooms, setRooms] = useState<Room[]>([]);
     const [amenities, setAmenities] = useState<AmenityCat[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -382,11 +383,11 @@ export default function HomePage() {
         return () => observer.disconnect();
     }, [cmsData]);
 
-    const useCMS = cmsData?.isPublished && cmsData?.sections && (cmsData.sections as any[]).length > 0;
+    const useCMS = Boolean(cmsData?.isPublished && cmsData?.sections && cmsData.sections.length > 0);
     
     if (loading) return <Loading />;
 
-    const sections: any[] = useCMS ? (cmsData!.sections as any[]) : [];
+    const sections: HomeSection[] = useCMS ? (cmsData!.sections as unknown as HomeSection[]) : [];
 
     // Find if there is a CMS-managed hero or a text-image "about" section
     const heroSection = sections.find(s => s.type === "hero") as HeroSection | undefined;
@@ -398,7 +399,7 @@ export default function HomePage() {
     return (
         <>
             {/* Hero */}
-            {heroSection && <HeroRenderer sec={heroSection} />}
+            {heroSection ? <HeroRenderer sec={heroSection} /> : <Hero />}
 
             {/* Rooms (passed fetched data) */}
             <Rooms roomsData={rooms} amenitiesData={amenities} />
@@ -423,4 +424,3 @@ export default function HomePage() {
         </>
     );
 }
-

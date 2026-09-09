@@ -3,6 +3,13 @@ import React, { useEffect, useState } from "react";
 import { NearbyPlace } from "../../components/types";
 import { FaMapMarkerAlt, FaPlane, FaHospital, FaUniversity, FaBuilding, FaRoad } from "react-icons/fa";
 
+const FALLBACK_PLACES: NearbyPlace[] = [
+  { id: "airport", name: "Jaipur International Airport", description: "Airport access", distance: "20 min", image: "", createdAt: "static" },
+  { id: "jecc", name: "JECC Jaipur", description: "Event and exhibition center", distance: "5 min", image: "", createdAt: "static" },
+  { id: "mg", name: "Mahatma Gandhi Hospital", description: "Healthcare nearby", distance: "5 min", image: "", createdAt: "static" },
+  { id: "jecrc", name: "JECRC University", description: "University access", distance: "5 min", image: "", createdAt: "static" },
+];
+
 const ICON_MAP: Record<string, React.ReactNode> = {
   "JAIPUR INTERNATIONAL AIRPORT": <FaPlane />,
   "MAHATMA GANDHI HOSPITAL": <FaHospital />,
@@ -22,9 +29,12 @@ export default function NearbyPlaces() {
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         // Show only 3-4 places as requested
-        setPlaces(data.slice(0, 4));
+        setPlaces(Array.isArray(data) && data.length > 0 ? data.slice(0, 4) : FALLBACK_PLACES);
       })
-      .catch((err) => console.error("Error fetching nearby places:", err))
+      .catch((err) => {
+        console.error("Error fetching nearby places:", err);
+        setPlaces(FALLBACK_PLACES);
+      })
       .finally(() => setLoading(false));
   }, []);
 

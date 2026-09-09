@@ -5,6 +5,8 @@ import { Hotel } from "../../components/types";
 export default function ContactPage() {
     const [hotel, setHotel] = useState<Hotel | null>(null);
     const [formSent, setFormSent] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [formError, setFormError] = useState("");
 
     useEffect(() => {
         fetch("/api/hotel-settings")
@@ -26,9 +28,38 @@ export default function ContactPage() {
         return () => observer.disconnect();
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setFormSent(true);
+        setSending(true);
+        setFormError("");
+
+        const form = new FormData(e.currentTarget);
+        const payload = {
+            name: String(form.get("name") || ""),
+            email: String(form.get("email") || ""),
+            phone: String(form.get("phone") || ""),
+            message: String(form.get("message") || ""),
+            source: "Contact page",
+        };
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || "Unable to submit enquiry. Please try again.");
+            }
+
+            setFormSent(true);
+        } catch (err) {
+            setFormError(err instanceof Error ? err.message : "Unable to submit enquiry. Please try again.");
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -109,13 +140,18 @@ export default function ContactPage() {
                             {!formSent ? (
                                 <form onSubmit={handleSubmit}>
                                     <div className="form-row">
-                                        <input className="form-input" type="text" placeholder="Full Name" required />
-                                        <input className="form-input" type="email" placeholder="Email Address" required />
+                                        <input className="form-input" name="name" type="text" placeholder="Full Name" required />
+                                        <input className="form-input" name="email" type="email" placeholder="Email Address" required />
                                     </div>
-                                    <input className="form-input" type="tel" placeholder="Phone Number" style={{ marginBottom: 16, width: "100%", display: "block" }} />
-                                    <textarea className="form-textarea" rows={6} placeholder="How can we assist you?" required style={{ marginBottom: 24, display: "block" }} />
-                                    <button type="submit" className="btn-submit">
-                                        Send Message
+                                    <input className="form-input" name="phone" type="tel" placeholder="Phone Number" style={{ marginBottom: 16, width: "100%", display: "block" }} />
+                                    <textarea className="form-textarea" name="message" rows={6} placeholder="How can we assist you?" required style={{ marginBottom: 24, display: "block" }} />
+                                    {formError && (
+                                        <p role="alert" style={{ color: "#ff9999", fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
+                                            {formError}
+                                        </p>
+                                    )}
+                                    <button type="submit" className="btn-submit" disabled={sending} style={{ opacity: sending ? 0.65 : 1, cursor: sending ? "not-allowed" : "pointer" }}>
+                                        {sending ? "Sending..." : "Send Message"}
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                             <line x1="22" y1="2" x2="11" y2="13" />
                                             <polygon points="22,2 15,22 11,13 2,9" />
@@ -138,4 +174,3 @@ export default function ContactPage() {
         </div>
     );
 }
-
